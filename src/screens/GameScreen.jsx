@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import EncounterModal from '../components/EncounterModal';
-import { TRAITS, SCENES, BLDGS, GND, ARCHS, NAMES, NCOLS, WEATHERS, DAY_EVENTS } from '../constants';
+import { TRAITS, SCENES, BLDGS, GND, ARCHS, NAMES, NCOLS, WEATHERS, DAY_EVENTS, MOODS, BOND_DEPTHS } from '../constants';
 
 const TID = TRAITS.map(t => t.id);
 const T = 40; // isometric tile size
@@ -80,6 +80,8 @@ function dNPC(ctx, n, ts, dn, npcs, PL, socR, prt, matchScoreFn, CW, CH) {
       ctx.setLineDash(n.bondType==='mutual'?[3,3]:[2,4]); ctx.stroke(); ctx.setLineDash([]);
     }
   }
+  // Visible emotion aura — the city's mood layer
+  dMoodAura(ctx, sx, sy-8*sc, n.emotion||'calm', ts, 26*sc);
   const aCol=n.bonded?(n.bondType==='mutual'?'#5DCAA5':'#D85A30'):n.col;
   ctx.beginPath(); ctx.ellipse(sx,sy+17*sc,13*sc,5.5*sc,0,0,Math.PI*2);
   ctx.fillStyle=aCol; ctx.globalAlpha=nd*(.09+pulse*.04*(prt/80)); ctx.fill(); ctx.globalAlpha=1;
@@ -111,8 +113,9 @@ function dNPC(ctx, n, ts, dn, npcs, PL, socR, prt, matchScoreFn, CW, CH) {
     if(prg>=1) n.react=false;
   }
 }
-function dPlayer(ctx, PL, ts, traits, CW, CH) {
+function dPlayer(ctx, PL, ts, traits, playerEmotion, CW, CH) {
   const p=s2w(PL.gx,PL.gy,CW,CH), sx=p.x, sy=p.y+T*.5-3;
+  dMoodAura(ctx, sx, sy-10, playerEmotion||'lonely', ts, 36);
   PL.tr.push({x:sx,y:sy,a:.5});
   if(PL.tr.length>16) PL.tr.shift();
   PL.tr.forEach((t,i)=>{
@@ -141,9 +144,66 @@ function mkNPC(i) {
     spd:.004+Math.random()*.004,col:NCOLS[i%NCOLS.length],ints,reps,tag:ints[0]||null,tagT:Math.floor(Math.random()*200),
     react:false,reactT:0,bonded:false,bondWith:null,bondType:null,state:'wander',stateT:0,
     mood:Math.random()>.5?'open':'closed',protocol:Math.random()>.4?'comply':'refuse',
-    phase:Math.random()*Math.PI*2,clusterTarget:null};
+    emotion:MOODS[Math.floor(Math.random()*MOODS.length)].id,moodTimer:Math.floor(Math.random()*2000),
+    phase:Math.random()*Math.PI*2,clusterTarget:null,bondDepth:0};
 }
 function timeStr(m){const h=Math.floor(m/60)%24,mm=Math.floor(m%60);return String(h).padStart(2,'0')+':'+String(mm).padStart(2,'0');}
+
+// Soft radial glow representing a person's visible emotional state
+function dMoodAura(ctx, sx, sy, emotionId, ts, radius) {
+  const mood = MOODS.find(m=>m.id===emotionId);
+  if(!mood) return;
+  const pulse = 0.5+0.5*Math.sin(ts*.0009+sx*.05);
+  const r = radius*(0.85+0.15*pulse);
+  const grd = ctx.createRadialGradient(sx,sy,r*.08,sx,sy,r);
+  grd.addColorStop(0, mood.col+'44');
+  grd.addColorStop(.5, mood.col+'1a');
+  grd.addColorStop(1,  mood.col+'00');
+  ctx.beginPath(); ctx.arc(sx,sy,r,0,Math.PI*2);
+  ctx.fillStyle=grd; ctx.fill();
+}
+
+// Vibe heatmap — soft mood glow pooling on the ground where emotions cluster
+function dVibeHeatmap(ctx, npcs, ts, CW, CH) {
+  ctx.save(); ctx.globalCompositeOperation='screen';
+  npcs.forEach(n=>{
+    const mood=MOODS.find(m=>m.id===n.emotion); if(!mood)return;
+    const p=s2w(n.gx,n.gy,CW,CH),cx=p.x,cy=p.y+T*.5,r=T*3.8;
+    const pulse=.6+.4*Math.sin(ts*.0006+n.phase);
+    const grd=ctx.createRadialGradient(cx,cy,0,cx,cy,r*pulse);
+    grd.addColorStop(0,mood.col+'22'); grd.addColorStop(.55,mood.col+'0b'); grd.addColorStop(1,mood.col+'00');
+    ctx.beginPath(); ctx.arc(cx,cy,r*pulse,0,Math.PI*2); ctx.fillStyle=grd; ctx.fill();
+  });
+  ctx.restore();
+}
+
+// Resonance clusters — visible ring when 3+ people share the same mood nearby
+function dResonanceClusters(ctx, npcs, ts, CW, CH) {
+  const seen=new Set();
+  npcs.forEach(anchor=>{
+    if(seen.has(anchor.id))return;
+    const cluster=npcs.filter(n=>n.emotion===anchor.emotion&&Math.hypot(n.gx-anchor.gx,n.gy-anchor.gy)<3.2);
+    if(cluster.length<3)return;
+    cluster.forEach(n=>seen.add(n.id));
+    const cgx=cluster.reduce((s,n)=>s+n.gx,0)/cluster.length;
+    const cgy=cluster.reduce((s,n)=>s+n.gy,0)/cluster.length;
+    const mood=MOODS.find(m=>m.id===anchor.emotion); if(!mood)return;
+    const pp=s2w(cgx,cgy,CW,CH),r=24+cluster.length*6;
+    const pulse=.5+.5*Math.abs(Math.sin(ts*.0009+cgx));
+    ctx.beginPath(); ctx.arc(pp.x,pp.y+T*.5,r,0,Math.PI*2);
+    ctx.strokeStyle=mood.col; ctx.lineWidth=1.2; ctx.globalAlpha=pulse*.38; ctx.stroke();
+    ctx.globalAlpha=pulse*.05; ctx.fillStyle=mood.col; ctx.fill(); ctx.globalAlpha=1;
+    ctx.font=`700 6px 'Space Mono',monospace`; ctx.textAlign='center';
+    ctx.fillStyle=mood.col; ctx.globalAlpha=pulse*.62;
+    ctx.fillText(mood.label+' ×'+cluster.length,pp.x,pp.y+T*.5-r-5); ctx.globalAlpha=1;
+  });
+}
+
+// Small compass cell helper
+function CompassCell({d,a}){
+  if(!d)return <div className="vcx"/>;
+  return(<div className="vcd" style={{background:d.col+'14',color:d.col,borderColor:d.col+'2e'}}><span className="vca">{a}</span><span className="vcl">{d.label.slice(0,3)}</span></div>);
+}
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -155,12 +215,16 @@ export default function GameScreen({ visible, config, onEnd }) {
     time:'06:00',zones:'0/5',bonds:0,pressure:30,legibility:50,events:0,
     comply:0,refuse:0,subvert:0,archetype:'THE WANDERER',archetypeColor:'rgba(175,169,236,.5)',
     dayPct:0,dayColor:'#534AB7',compPct:0,refPct:0,subPct:0,
+    cityEmotion:'LONELY',cityEmotionCol:'#534AB7',
+    vibeDist:[],vibeCompass:{n:null,s:null,e:null,w:null},
   });
   const [encounter, setEncounter] = useState(null);
   const [feed, setFeed] = useState([]);
   const [bonds, setBonds] = useState([]);
   const [keysDown, setKeysDown] = useState({w:false,a:false,s:false,d:false});
   const [ambientMsg, setAmbientMsg] = useState(null);
+  const [heatmapOn, setHeatmapOn] = useState(true);
+  const heatmapRef = useRef(true);
 
   // Stable ref so modal callbacks always call current loop functions
   const cbRef = useRef({ handleChoice:()=>{}, handleBond:()=>{}, closeEncounter:()=>{} });
@@ -214,6 +278,21 @@ export default function GameScreen({ visible, config, onEnd }) {
     function showAmbient(txt){setAmbientMsg(txt); setTimeout(()=>setAmbientMsg(null),2200);}
     function initRain(){rainD=[];for(let i=0;i<60;i++) rainD.push({x:Math.random()*CW,y:Math.random()*CH,spd:3+Math.random()*2,a:Math.random()*.4+.1});}
 
+    function getPlayerEmotion(){
+      if(GS.bonds.length>=3) return 'joyful';
+      if(GS.prs>70) return 'anxious';
+      if(GS.refuse>GS.comply+GS.subvert&&GS.refuse>2) return 'melancholic';
+      if(GS.subvert>GS.comply+GS.refuse&&GS.subvert>1) return 'curious';
+      if(GS.comply>GS.refuse+GS.subvert&&GS.comply>1) return 'calm';
+      return 'lonely';
+    }
+    function getCityEmotion(){
+      const counts={};
+      npcs.forEach(n=>{counts[n.emotion]=(counts[n.emotion]||0)+1;});
+      const top=Object.entries(counts).sort((a,b)=>b[1]-a[1])[0];
+      return top?top[0]:'calm';
+    }
+
     function matchScore(npc){
       const pt=config.traits; let m=0,cl=0;
       npc.ints.forEach(i=>{if(pt.al.includes(i))m++;if(pt.rp.includes(i))cl++;});
@@ -227,21 +306,43 @@ export default function GameScreen({ visible, config, onEnd }) {
       if(r/total>.45) return ARCHS.ghost;
       return ARCHS.neg;
     }
+    function computeVibeCompass(){
+      const dirs={n:[],s:[],e:[],w:[]};
+      npcs.forEach(n=>{
+        const dx=n.gx-PL.gx,dy=n.gy-PL.gy,dist=Math.hypot(dx,dy);
+        if(dist<0.5||dist>12)return;
+        if(Math.abs(dy)>Math.abs(dx)){if(dy<0)dirs.n.push(n.emotion);else dirs.s.push(n.emotion);}
+        else{if(dx>0)dirs.e.push(n.emotion);else dirs.w.push(n.emotion);}
+      });
+      function dom(arr){
+        if(!arr.length)return null;
+        const c={};arr.forEach(e=>{c[e]=(c[e]||0)+1;});
+        const top=Object.entries(c).sort((a,b)=>b[1]-a[1])[0];
+        const mood=MOODS.find(m=>m.id===top[0]);
+        return mood?{col:mood.col,label:mood.label,count:top[1]}:null;
+      }
+      return{n:dom(dirs.n),s:dom(dirs.s),e:dom(dirs.e),w:dom(dirs.w)};
+    }
     function buildHud(){
       const{comply:c,refuse:r,subvert:s}=GS,mx=Math.max(c,r,s,1),arch=getArch();
       const tp=dayMinutes/1440;
       let tc='#534AB7';
       if(tp<.25)tc='#3C3489';else if(tp<.5)tc='#5DCAA5';else if(tp<.75)tc='#BA7517';
+      const ce=getCityEmotion(), cmood=MOODS.find(m=>m.id===ce)||MOODS[3];
+      const ec={};npcs.forEach(n=>{ec[n.emotion]=(ec[n.emotion]||0)+1;});
+      const tn=npcs.length||1;
+      const vibeDist=MOODS.map(m=>({...m,pct:Math.round(((ec[m.id]||0)/tn)*100)})).filter(m=>m.pct>0).sort((a,b)=>b.pct-a.pct).slice(0,5);
       return{time:timeStr(dayMinutes),zones:GS.visited.size+'/5',bonds:GS.bonds.length,
         pressure:Math.round(GS.prs),legibility:Math.round(GS.leg),events:evCount,
         comply:c,refuse:r,subvert:s,archetype:arch.n,archetypeColor:arch.c,
-        dayPct:tp*100,dayColor:tc,compPct:Math.round(c/mx*100),refPct:Math.round(r/mx*100),subPct:Math.round(s/mx*100)};
+        dayPct:tp*100,dayColor:tc,compPct:Math.round(c/mx*100),refPct:Math.round(r/mx*100),subPct:Math.round(s/mx*100),
+        cityEmotion:cmood.label,cityEmotionCol:cmood.col,vibeDist,vibeCompass:computeVibeCompass()};
     }
 
     function addBond(npc,type){
       if(!GS.bonds.find(b=>b.id===npc.id)){
-        GS.bonds.push({id:npc.id,name:npc.name,col:npc.col,type});
-        npc.bonded=true; npc.bondWith='player'; npc.bondType=type;
+        GS.bonds.push({id:npc.id,name:npc.name,col:npc.col,type,depth:0,emotion:npc.emotion});
+        npc.bonded=true; npc.bondWith='player'; npc.bondType=type; npc.bondDepth=0;
         setBonds([...GS.bonds]);
       }
     }
@@ -323,6 +424,7 @@ export default function GameScreen({ visible, config, onEnd }) {
       if(k==='a'||k==='arrowleft') K.a=true;
       if(k==='s'||k==='arrowdown') K.s=true;
       if(k==='d'||k==='arrowright')K.d=true;
+      if(k==='h'){heatmapRef.current=!heatmapRef.current;setHeatmapOn(heatmapRef.current);}
       setKeysDown({...K});
     }
     function onKU(e){
@@ -368,6 +470,37 @@ export default function GameScreen({ visible, config, onEnd }) {
           if(shared.length>0){const btype=Math.random()>.3?'mutual':'clash';n.bonded=true;n.bondWith=other.id;n.bondType=btype;other.bonded=true;other.bondWith=n.id;other.bondType=btype;pushFeed((btype==='mutual'?'Bond':'Clash')+': '+n.name+'+'+other.name);}}
       }
       n.tagT++;if(n.tagT>320)n.tagT=0;
+      // Mood spreading — player's emotion ripples outward to nearby people
+      n.moodTimer=(n.moodTimer||0)+dt;
+      if(n.moodTimer>3500+Math.random()*3000){
+        n.moodTimer=0;
+        const pd=Math.hypot(PL.gx-n.gx,PL.gy-n.gy);
+        if(pd<2.5){
+          const pe=getPlayerEmotion();
+          if(pe!==n.emotion&&Math.random()>.5){
+            n.emotion=pe;
+            const pp=s2w(n.gx,n.gy,CW,CH);
+            const mc=MOODS.find(m=>m.id===pe);
+            addFloat(pp.x,pp.y+T*.5-28,mc?mc.label:pe,mc?mc.col:'#AFA9EC');
+          }
+        } else if(pd>4&&Math.random()>.68){
+          // Emotions drift when far from player
+          n.emotion=MOODS[Math.floor(Math.random()*MOODS.length)].id;
+        }
+      }
+      // Deepen bond when player stays near a bonded NPC
+      if(n.bonded&&n.bondWith==='player'&&Math.hypot(PL.gx-n.gx,PL.gy-n.gy)<1.8){
+        if(Math.random()>.9995&&n.bondDepth<3){
+          n.bondDepth=Math.min(3,n.bondDepth+1);
+          const pp=s2w(n.gx,n.gy,CW,CH);
+          addFloat(pp.x,pp.y+T*.5-28,BOND_DEPTHS[n.bondDepth],'#5DCAA5');
+          pushFeed(n.name+' → '+BOND_DEPTHS[n.bondDepth]);
+          // Update bond depth in GS.bonds
+          const gb=GS.bonds.find(b=>b.id===n.id);
+          if(gb) gb.depth=n.bondDepth;
+          setBonds([...GS.bonds]);
+        }
+      }
     }
 
     function dRain(){
@@ -412,14 +545,16 @@ export default function GameScreen({ visible, config, onEnd }) {
       grd.addColorStop(0,sky[0]);grd.addColorStop(1,sky[1]);ctx.fillStyle=grd;ctx.fillRect(0,0,CW,CH);
       ctx.save(); ctx.translate(cam.x,cam.y);
       [...GND].sort((a,b)=>(a.gx+a.gy)-(b.gx+b.gy)).forEach(t=>{if(!t.bk)dGnd(ctx,t.gx,t.gy,dn,CW,CH);});
+      if(heatmapRef.current) dVibeHeatmap(ctx,npcs,ts,CW,CH);
       [...BLDGS].sort((a,b)=>(a.gx+a.gy)-(b.gx+b.gy)).forEach(b=>{
         dTile(ctx,b.gx,b.gy,b.t,b.s,b.d,b.h,CW,CH);
         if((dn>.6||dn<.1)&&Math.random()>.994){const pp=s2w(b.gx,b.gy,CW,CH);ctx.fillStyle=`rgba(255,220,100,${.12+Math.random()*.18})`;ctx.fillRect(pp.x+(Math.random()-.5)*T*1.5,pp.y+T*.5-b.h*14-Math.random()*b.h*14,3,5);}
       });
       [...SCENES].sort((a,b)=>(a.gx+a.gy)-(b.gx+b.gy)).forEach(sc=>dScene(ctx,sc,ts,dn,GS.visited,GS.prt,CW,CH));
+      dResonanceClusters(ctx,npcs,ts,CW,CH);
       const objs=[...npcs.map(n=>({...n,_p:false})),{gx:PL.gx,gy:PL.gy,_p:true}];
       objs.sort((a,b)=>(a.gx+a.gy)-(b.gx+b.gy)).forEach(o=>{
-        if(o._p) dPlayer(ctx,PL,ts,config.traits,CW,CH);
+        if(o._p) dPlayer(ctx,PL,ts,config.traits,getPlayerEmotion(),CW,CH);
         else dNPC(ctx,o,ts,dn,npcs,PL,GS.socR,GS.prt,matchScore,CW,CH);
       });
       rings=rings.filter(rg=>{rg.r+=rg.sp;rg.a-=.017;if(rg.a<=0||rg.r>=rg.mR)return false;ctx.beginPath();ctx.arc(rg.x,rg.y,rg.r,0,Math.PI*2);ctx.strokeStyle=rg.col;ctx.lineWidth=.8;ctx.globalAlpha=rg.a;ctx.stroke();ctx.globalAlpha=1;return true;});
@@ -467,6 +602,7 @@ export default function GameScreen({ visible, config, onEnd }) {
             <div className="hp wr">PRESSURE <b>{hud.pressure}%</b></div>
             <div className="hp">LEG <b>{hud.legibility}%</b></div>
             <div className="hp ev">EVENTS <b>{hud.events}</b></div>
+            <div className="hp" style={{borderColor:hud.cityEmotionCol+'66'}}>CITY <b style={{color:hud.cityEmotionCol}}>{hud.cityEmotion}</b></div>
           </div>
         </div>
 
@@ -480,16 +616,44 @@ export default function GameScreen({ visible, config, onEnd }) {
           <div className="sb"><span className="sbl">SUBVERT</span><div className="sbt"><div className="sbf" style={{width:`${hud.subPct}%`,background:'#5DCAA5'}}/></div></div>
         </div>
 
-        {/* Social graph */}
+        {/* Social graph + City mood distribution */}
         <div id="sgraph">
           <div className="sgt">SOCIAL GRAPH</div>
           {bonds.slice(-5).map(b=>(
             <div key={b.id} className="brow">
               <div className="bd" style={{background:b.col}}/>
               <span className="bn">{b.name}</span>
-              <span className={`btp ${b.type==='mutual'?'m':'c'}`}>{b.type==='mutual'?'resonant':'friction'}</span>
+              <span className={`btp ${b.type==='mutual'?'m':'c'}`}>{BOND_DEPTHS[b.depth||0]}</span>
             </div>
           ))}
+          {hud.vibeDist.length>0&&(
+            <>
+              <div className="sgt" style={{marginTop:7}}>CITY MOOD</div>
+              {hud.vibeDist.map(m=>(
+                <div key={m.id} className="vmrow">
+                  <span className="vmn" style={{color:m.col}}>{m.label.slice(0,3)}</span>
+                  <div className="vmbar"><div className="vmfill" style={{width:`${m.pct}%`,background:m.col}}/></div>
+                  <span className="vmp">{m.pct}%</span>
+                </div>
+              ))}
+            </>
+          )}
+        </div>
+
+        {/* Vibe Compass */}
+        <div id="vcompass">
+          <div className="vct">VIBE MAP <span className={`vhbtn${heatmapOn?' on':''}`} onClick={()=>{heatmapRef.current=!heatmapRef.current;setHeatmapOn(v=>!v);}} style={{pointerEvents:'all',cursor:'pointer'}}>{heatmapOn?'ON':'OFF'}</span></div>
+          <div className="vcg">
+            <div className="vcx"/>
+            <CompassCell d={hud.vibeCompass.n} a="↑"/>
+            <div className="vcx"/>
+            <CompassCell d={hud.vibeCompass.w} a="←"/>
+            <div className="vcc">●</div>
+            <CompassCell d={hud.vibeCompass.e} a="→"/>
+            <div className="vcx"/>
+            <CompassCell d={hud.vibeCompass.s} a="↓"/>
+            <div className="vcx"/>
+          </div>
         </div>
 
         {/* Bottom archetype bar */}

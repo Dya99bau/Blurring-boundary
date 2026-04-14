@@ -118,3 +118,16 @@ export const ARCHS = {
   ghost:{n:'THE GHOST',c:'#F09595',s:'Your absence was its own signal.',m:"You refused consistently. Your gap became visible — the most conspicuous presence in a city of legible people."},
   neg:{n:'THE NEGOTIATOR',c:'#FAC775',s:'Honest, exhausting, human.',m:"You moved between positions. The system is not one thing and neither are you. Negotiation gets harder the longer the protocol runs."},
 };
+
+// Visible emotional states — broadcast as aura color in the city
+export const MOODS = [
+  {id:'joyful',     col:'#FAC775', label:'JOYFUL'},
+  {id:'melancholic',col:'#AFA9EC', label:'MELANCHOLIC'},
+  {id:'anxious',    col:'#F09595', label:'ANXIOUS'},
+  {id:'calm',       col:'#5DCAA5', label:'CALM'},
+  {id:'lonely',     col:'#534AB7', label:'LONELY'},
+  {id:'curious',    col:'#1D9E75', label:'CURIOUS'},
+];
+
+// Bond depth labels — how a connection evolves over encounters
+export const BOND_DEPTHS = ['acquaintance','familiar','close','bonded'];

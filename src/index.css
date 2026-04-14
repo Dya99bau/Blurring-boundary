@@ -150,3 +150,32 @@ canvas#C{display:block;width:100%;height:100%;}
 .endb{font-family:'Space Mono',monospace;font-size:8px;padding:8px 16px;border-radius:8px;border:.5px solid;background:transparent;cursor:pointer;letter-spacing:.11em;text-transform:uppercase;transition:all .2s;}
 .endb:hover{transform:translateY(-1px);}
 @keyframes blink{0%,60%{opacity:1;}61%,100%{opacity:.2;}}
+
+/* ── Mood system ──────────────────────────────────────────────────────────── */
+/* Visible emotional state badge shown in NPC encounters */
+.emood{font-family:'Space Mono',monospace;font-size:6.5px;letter-spacing:.12em;padding:3px 9px;border-radius:20px;border:.5px solid;display:inline-block;margin-bottom:9px;line-height:1.6;}
+
+/* Bonded NPC re-encounter panel */
+.ebonded{background:rgba(93,202,165,.04);border:.5px solid rgba(93,202,165,.18);border-radius:8px;padding:9px 12px;margin-bottom:10px;}
+.ebdepth{font-family:'Space Mono',monospace;font-size:8px;font-weight:700;letter-spacing:.14em;margin-bottom:4px;}
+.ebdesc{font-size:10px;color:rgba(175,169,236,.5);line-height:1.7;}
+
+/* ── Vibe Heatmap & Compass ─────────────────────────────────────────────────── */
+/* City mood distribution bars inside social graph */
+.vmrow{display:flex;align-items:center;gap:4px;margin-bottom:2px;}
+.vmn{font-family:'Space Mono',monospace;font-size:5.5px;letter-spacing:.05em;width:22px;flex-shrink:0;}
+.vmbar{flex:1;height:2px;background:rgba(255,255,255,.05);border-radius:1px;}
+.vmfill{height:100%;border-radius:1px;transition:width .7s;}
+.vmp{font-family:'Space Mono',monospace;font-size:5px;color:rgba(175,169,236,.22);width:18px;text-align:right;flex-shrink:0;}
+
+/* Vibe compass panel */
+#vcompass{position:absolute;bottom:106px;right:7px;z-index:20;pointer-events:none;width:88px;}
+.vct{font-family:'Space Mono',monospace;font-size:6px;letter-spacing:.13em;color:rgba(175,169,236,.28);margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;}
+.vhbtn{font-family:'Space Mono',monospace;font-size:5px;padding:1px 5px;border-radius:5px;background:rgba(83,74,183,.1);color:rgba(175,169,236,.28);border:.5px solid rgba(83,74,183,.18);transition:all .2s;}
+.vhbtn.on{background:rgba(93,202,165,.1);color:#5DCAA5;border-color:rgba(93,202,165,.28);}
+.vcg{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;}
+.vcd{background:rgba(255,255,255,.025);border:.5px solid rgba(83,74,183,.1);border-radius:4px;height:22px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;transition:background .5s,border-color .5s;}
+.vcc{background:rgba(93,202,165,.05);border:.5px solid rgba(93,202,165,.18);border-radius:4px;height:22px;display:flex;align-items:center;justify-content:center;color:rgba(93,202,165,.4);font-size:9px;}
+.vcx{height:22px;}
+.vca{font-family:'Space Mono',monospace;font-size:7px;font-weight:700;line-height:1;}
+.vcl{font-family:'Space Mono',monospace;font-size:5px;letter-spacing:.04em;line-height:1;opacity:.8;}
