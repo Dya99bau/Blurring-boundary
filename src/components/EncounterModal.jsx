@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { SCENES, NPC_ACTS, RITUALS, MOODS, BOND_DEPTHS } from '../constants';
+import { SCENES, NPC_ACTS, RITUALS, MOODS, BOND_DEPTHS, pickNPCDialogue } from '../constants';
 
 // ── Zone Encounter ────────────────────────────────────────────────────────────
 function ZoneEncounter({ encounter, onChoice, onClose }) {
@@ -67,7 +67,7 @@ function ZoneEncounter({ encounter, onChoice, onClose }) {
 
 // ── NPC Encounter ─────────────────────────────────────────────────────────────
 function NpcEncounter({ encounter, onBond, onClose }) {
-  const { npc, matchScore } = encounter;
+  const { npc, matchScore, district } = encounter;
   const [phase, setPhase] = useState(npc.bonded ? 'bonded' : 'actions');
   const [resultText, setResultText] = useState('');
   const [resultCls, setResultCls] = useState('w');
@@ -79,10 +79,8 @@ function NpcEncounter({ encounter, onBond, onClose }) {
   const npcMood = MOODS.find(m => m.id === npc.emotion) || MOODS[3];
   const depthLabel = BOND_DEPTHS[npc.bondDepth || 0];
 
-  const reps = npc.reps.length ? `Repels: ${npc.reps.map(r => `<em>${r}</em>`).join(', ')}. ` : '';
-  let body = `${npc.name} is ${npc.mood === 'open' ? 'open to connection' : 'moving through the city alone'}. Signal tags: ${npc.ints.map(i => `<em>${i}</em>`).join(', ')}. ${reps}Protocol stance: <b>${npc.protocol}</b>.`;
-  if (isMutual) body += ` <b>You share aligned interests. A connection is possible.</b>`;
-  else if (isClash) body += ` <b>Your interests conflict. The protocol registers friction.</b>`;
+  // Composed NPC dialogue — deterministic per NPC, varies by emotion/trait/district/match
+  const dialogue = pickNPCDialogue(npc, matchScore, district?.n?.toLowerCase());
 
   const acts = isMutual
     ? [NPC_ACTS[0], NPC_ACTS[1], NPC_ACTS[2], NPC_ACTS[3]]
@@ -169,7 +167,26 @@ function NpcEncounter({ encounter, onBond, onClose }) {
       {/* New NPC — standard encounter */}
       {phase === 'actions' && (
         <>
-          <div className="ebody" dangerouslySetInnerHTML={{ __html: body }} />
+          {/* NPC voice — what they actually say */}
+          <div className="nv-voice">{dialogue.voice}</div>
+
+          {/* Signal tags as small badges */}
+          <div className="nv-tagrow">
+            {npc.ints.map(t => (
+              <span key={t} className="nv-tag nv-a">{t}</span>
+            ))}
+            {npc.reps.map(t => (
+              <span key={t} className="nv-tag nv-r">{t}</span>
+            ))}
+            <span className="nv-tag" style={{borderColor:'rgba(175,169,236,.15)',color:'rgba(175,169,236,.3)'}}>{npc.protocol}</span>
+          </div>
+
+          {/* Protocol stance — their own words */}
+          <div className="nv-proto">"{dialogue.protLine}"</div>
+
+          {/* Resonance / clash / neutral observation */}
+          <div className={`nv-match ${dialogue.matchType}`}>{dialogue.matchLine}</div>
+
           <div className="esec">HOW DO YOU ENGAGE?</div>
           <div className="ag">
             {acts.map(act => {
@@ -218,6 +235,59 @@ function NpcEncounter({ encounter, onBond, onClose }) {
   );
 }
 
+// ── Bridge Encounter ──────────────────────────────────────────────────────────
+function BridgeEncounter({ encounter, onChoice, onClose }) {
+  const { scene } = encounter;
+  const [chosen, setChosen] = useState(null);
+
+  function handleChoice(ch) {
+    if (chosen) return;
+    setChosen(ch);
+    onChoice(scene, ch);
+  }
+
+  return (
+    <>
+      <div className="eey" style={{ color: '#185FA5' }}>BRIDGE CROSSING · GRAND CANAL</div>
+      <div className="eh2">
+        <div className="edot" style={{ background: '#185FA5' }} />
+        <div className="et2">{scene.loc}</div>
+      </div>
+      <div className="ebody" dangerouslySetInnerHTML={{ __html: scene.story }} />
+
+      <div className="esec">YOUR RESPONSE</div>
+      <div className="cg">
+        {scene.choices.map(ch => {
+          const cost = [];
+          if (ch.l !== 0) cost.push((ch.l > 0 ? '+' : '') + ch.l + ' leg');
+          if (ch.p !== 0) cost.push((ch.p > 0 ? '+' : '') + ch.p + ' prs');
+          const isChosen = chosen && chosen.b === ch.b;
+          const isLocked = chosen && !isChosen;
+          return (
+            <div
+              key={ch.b}
+              className={`cc${isChosen ? ' ch' : ''}${isLocked ? ' lk' : ''}`}
+              onClick={() => handleChoice(ch)}
+            >
+              <span className="cb2">{ch.b}</span>
+              <span className="ct2">{ch.t}</span>
+              <div className="cco">{cost.join(' · ')}</div>
+            </div>
+          );
+        })}
+      </div>
+
+      {chosen && (
+        <div className={`eres on ${chosen.y}`}>{chosen.c}</div>
+      )}
+
+      <div className="efoot">
+        <div className="ecl" onClick={onClose}>← keep walking</div>
+      </div>
+    </>
+  );
+}
+
 // ── Modal wrapper ─────────────────────────────────────────────────────────────
 export default function EncounterModal({ encounter, onChoice, onBond, onClose }) {
   if (!encounter) return null;
@@ -225,7 +295,9 @@ export default function EncounterModal({ encounter, onChoice, onBond, onClose })
   return (
     <div id="enc" className="on">
       <div id="ecard">
-        {encounter.type === 'zone'
+        {encounter.type === 'bridge'
+          ? <BridgeEncounter encounter={encounter} onChoice={onChoice} onClose={onClose} />
+          : encounter.type === 'zone'
           ? <ZoneEncounter encounter={encounter} onChoice={onChoice} onClose={onClose} />
           : <NpcEncounter  encounter={encounter} onBond={onBond} onClose={onClose} />
         }

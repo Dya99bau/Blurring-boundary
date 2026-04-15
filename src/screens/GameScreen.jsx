@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import EncounterModal from '../components/EncounterModal';
-import { TRAITS, SCENES, BLDGS, GND, ARCHS, NAMES, NCOLS, WEATHERS, DAY_EVENTS, MOODS, BOND_DEPTHS } from '../constants';
+import { TRAITS, SCENES, BRIDGE_SCENES, BLDGS, GND, ARCHS, NAMES, NCOLS, WEATHERS, DAY_EVENTS, MOODS, BOND_DEPTHS } from '../constants';
 
 const TID = TRAITS.map(t => t.id);
 const T = 40; // isometric tile size
@@ -15,11 +15,88 @@ function lhx(a, b, t) {
   const bh=[parseInt(b.slice(1,3),16),parseInt(b.slice(3,5),16),parseInt(b.slice(5,7),16)];
   return '#'+ah.map((v,i)=>Math.round(v+(bh[i]-v)*t).toString(16).padStart(2,'0')).join('');
 }
+// District-aware ground color — Bio-Digital Baroque palette per zone
 function gcol(gx, gy, dn) {
   const nt=Math.max(0,Math.min(1,(dn-.6)*4));
-  const v=(Math.sin(gx*1.4+gy*.8)*.5+.5)*.05;
-  const b=Math.round((12+v*8)*(1-nt*.35));
-  return `rgb(${b},${b},${Math.round(b*1.8-nt*2)})`;
+  const v=(Math.sin(gx*1.4+gy*.8)*.5+.5)*.04;
+  let r,g,b;
+  if(gx>=3){ // Arsenale: industrial blue-grey
+    const br=Math.round((13+v*7)*(1-nt*.35));
+    r=Math.max(0,Math.round(br*.85));g=Math.max(0,Math.round(br*.88));b=Math.max(0,Math.round(br*1.3-nt*2));
+  }else if(gx<=-3||gy<=-2){ // Cannaregio: moss-warm
+    const br=Math.round((12+v*7)*(1-nt*.35));
+    r=Math.max(0,Math.round(br*.82));g=Math.max(0,br);b=Math.max(0,Math.round(br*.7-nt*2));
+  }else if(gy>=5){ // Dorsoduro: deep lagoon
+    const br=Math.round((10+v*6)*(1-nt*.35));
+    r=Math.max(0,Math.round(br*.6));g=Math.max(0,Math.round(br*.85));b=Math.max(0,Math.round(br*1.6-nt*2));
+  }else{ // San Marco: warm Istrian limestone
+    const br=Math.round((14+v*8)*(1-nt*.3));
+    r=Math.max(0,br);g=Math.max(0,Math.round(br*.9));b=Math.max(0,Math.round(br*.65-nt*2));
+  }
+  return `rgb(${r},${g},${b})`;
+}
+// Aura-reactive canal water — accepts ts for shimmer and canalMatch for Vibe Match bloom
+function dCanal(ctx, gx, gy, dn, emotion, ts, canalMatch, CW, CH) {
+  const p=s2w(gx,gy,CW,CH);
+  const pts=[{x:p.x,y:p.y},{x:p.x+T,y:p.y+T*.5},{x:p.x,y:p.y+T},{x:p.x-T,y:p.y+T*.5}];
+  const nt=Math.max(0,Math.min(1,(dn-.6)*4));
+  const sh=(Math.sin(gx*1.2+gy*.9+ts*.00008)*.5+.5)*.04; // gentle time-based shimmer
+  const bd=Math.round((9+sh*5)*(1-nt*.2));
+  ctx.beginPath(); pts.forEach((pt,i)=>i?ctx.lineTo(pt.x,pt.y):ctx.moveTo(pt.x,pt.y));
+  ctx.closePath();
+  ctx.fillStyle=`rgb(${Math.max(0,Math.round(bd*.35))},${Math.max(0,Math.round(bd*.78))},${bd})`; ctx.fill();
+  // Player emotion tints the canal water
+  const eTints={joyful:'250,199,117',melancholic:'175,169,236',anxious:'240,149,149',
+    calm:'93,202,165',lonely:'83,74,183',curious:'29,158,117'};
+  const et=eTints[emotion]||'93,202,165';
+  ctx.fillStyle=`rgba(${et},.06)`; ctx.fill();
+  // Canal Vibe Match bloom — extra pulse in matched Aura color, fades over 3.5s
+  if(canalMatch){
+    const bloom=Math.max(0,1-(ts-canalMatch.t)/3500);
+    const pulse=0.55+0.45*Math.sin(ts*.0028+gx*.8);
+    const [rv,gv,bv]=[parseInt(canalMatch.col.slice(1,3),16),parseInt(canalMatch.col.slice(3,5),16),parseInt(canalMatch.col.slice(5,7),16)];
+    ctx.fillStyle=`rgba(${rv},${gv},${bv},${bloom*pulse*.22})`; ctx.fill();
+  }
+  ctx.strokeStyle='rgba(93,202,165,.05)'; ctx.lineWidth=.3; ctx.stroke();
+}
+// Dorsoduro bioluminescence — barnacle glow patches after dark (dn > 0.65)
+function dDorsoduoGlow(ctx, dn, ts, CW, CH) {
+  const intensity=Math.max(0,Math.min(1,(dn-.65)*3.5));
+  if(intensity<.01) return;
+  ctx.save(); ctx.globalCompositeOperation='screen';
+  const patches=[
+    {gx:-1,gy:6},{gx:1,gy:7},{gx:-3,gy:7},{gx:3,gy:6},
+    {gx:0,gy:8},{gx:-2,gy:9},{gx:4,gy:8},{gx:-4,gy:6},{gx:2,gy:6},
+  ];
+  patches.forEach((pos,i)=>{
+    const pulse=.38+.62*Math.abs(Math.sin(ts*.0005+i*1.4));
+    const al=intensity*pulse*.13;
+    const pp=s2w(pos.gx,pos.gy,CW,CH);
+    const r=T*3.2;
+    const grd=ctx.createRadialGradient(pp.x,pp.y+T*.5,0,pp.x,pp.y+T*.5,r);
+    grd.addColorStop(0,`rgba(93,202,165,${al})`);
+    grd.addColorStop(.5,`rgba(24,95,165,${al*.35})`);
+    grd.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.beginPath(); ctx.arc(pp.x,pp.y+T*.5,r,0,Math.PI*2);
+    ctx.fillStyle=grd; ctx.fill();
+  });
+  ctx.restore();
+}
+// Faint district name labels — rendered on the ground layer
+function dDistrictLabels(ctx, ts, CW, CH) {
+  const labels=[
+    {n:'SAN MARCO',gx:-0.5,gy:2.5,c:'#AFA9EC'},
+    {n:'ARSENALE',gx:5.5,gy:0.5,c:'#BA7517'},
+    {n:'CANNAREGIO',gx:-5.5,gy:-0.5,c:'#1D9E75'},
+    {n:'DORSODURO',gx:0.5,gy:7.5,c:'#185FA5'},
+  ];
+  labels.forEach(d=>{
+    const p=s2w(d.gx,d.gy,CW,CH);
+    const al=.1+.04*Math.sin(ts*.0006+d.gx);
+    ctx.font=`400 7px 'Space Mono',monospace`; ctx.textAlign='center';
+    ctx.fillStyle=d.c; ctx.globalAlpha=al;
+    ctx.fillText(d.n,p.x,p.y+T*.5); ctx.globalAlpha=1;
+  });
 }
 function skyCol(dn) {
   const h=dn*24;
@@ -217,6 +294,8 @@ export default function GameScreen({ visible, config, onEnd }) {
     dayPct:0,dayColor:'#534AB7',compPct:0,refPct:0,subPct:0,
     cityEmotion:'LONELY',cityEmotionCol:'#534AB7',
     vibeDist:[],vibeCompass:{n:null,s:null,e:null,w:null},
+    playerTypeName:null,playerTypeColor:'#7F77DD',
+    district:'SAN MARCO',districtCol:'#AFA9EC',
   });
   const [encounter, setEncounter] = useState(null);
   const [feed, setFeed] = useState([]);
@@ -225,6 +304,7 @@ export default function GameScreen({ visible, config, onEnd }) {
   const [ambientMsg, setAmbientMsg] = useState(null);
   const [heatmapOn, setHeatmapOn] = useState(true);
   const heatmapRef = useRef(true);
+  const canalMatchRef = useRef(null); // {col, t} — active canal Vibe Match bloom
 
   // Stable ref so modal callbacks always call current loop functions
   const cbRef = useRef({ handleChoice:()=>{}, handleBond:()=>{}, closeEncounter:()=>{} });
@@ -259,16 +339,36 @@ export default function GameScreen({ visible, config, onEnd }) {
     window.addEventListener('resize',rsz);
 
     // Mutable game state
-    const GS={comply:0,refuse:0,subvert:0,leg:50,prs:30,visited:new Set(),visitCount:{},
-      bonds:[],rituals:[],events:0,gameOver:false,prt:config.prt,simSpd:config.spd,socR:config.socR};
+    const _pt = config.playerType || { id:'none', mods:{}, startTraits:{al:[],rp:[]} };
+    // Merge player type preset traits with the player's own configured traits
+    const mergedTraits = {
+      al:[...new Set([...config.traits.al,..._pt.startTraits.al])],
+      rp:[...new Set([...config.traits.rp,..._pt.startTraits.rp])],
+    };
+    const GS={comply:0,refuse:0,subvert:0,
+      leg:Math.max(0,Math.min(100,50+(_pt.mods.legibility||0))),
+      prs:Math.max(0,Math.min(100,30+(_pt.mods.pressure||0))),
+      visited:new Set(),visitCount:{},
+      bonds:[],rituals:[],events:0,gameOver:false,prt:config.prt,simSpd:config.spd,
+      socR:Math.max(1,Math.min(4,config.socR+(_pt.mods.socRBonus||0)))};
     const PL={gx:0,gy:0,tx:0,ty:0,mv:false,tr:[],spd:.1};
     const K={w:false,a:false,s:false,d:false};
     const cam={x:0,y:0};
     let npcs=[],rings=[],sparks=[],floats=[];
     let dayMinutes=360,weather='clear',wTimer=0,wNext=600,rainD=[];
     let firedEvs=new Set(),evCount=0,nearCool=0,lastNear=null,frameCount=0;
+    let bridgeCool=0,wasInCanal=false,canalBloomCool=0;
 
     for(let i=0;i<config.pop;i++) npcs.push(mkNPC(i));
+
+    // District lookup — mirrors gcol / dCanal zone logic
+    function getDistrict(gx,gy){
+      if(gx>=1&&gx<=2) return {n:'GRAND CANAL',c:'#185FA5'};
+      if(gx>=3) return {n:'ARSENALE',c:'#BA7517'};
+      if(gx<=-3||gy<=-2) return {n:'CANNAREGIO',c:'#1D9E75'};
+      if(gy>=5) return {n:'DORSODURO',c:'#185FA5'};
+      return {n:'SAN MARCO',c:'#AFA9EC'};
+    }
 
     // Helpers
     function addRings(sx,sy,col,n){for(let i=0;i<(n||2);i++) rings.push({x:sx+(Math.random()-.5)*14,y:sy+(Math.random()-.5)*6,r:4+i*7,mR:55+i*12,a:.7,col,sp:1.3+Math.random()*.6});}
@@ -294,7 +394,7 @@ export default function GameScreen({ visible, config, onEnd }) {
     }
 
     function matchScore(npc){
-      const pt=config.traits; let m=0,cl=0;
+      const pt=mergedTraits; let m=0,cl=0;
       npc.ints.forEach(i=>{if(pt.al.includes(i))m++;if(pt.rp.includes(i))cl++;});
       npc.reps.forEach(r=>{if(pt.al.includes(r))cl++;if(pt.rp.includes(r))m++;});
       return{mutual:m,clash:cl,total:m-cl};
@@ -336,7 +436,9 @@ export default function GameScreen({ visible, config, onEnd }) {
         pressure:Math.round(GS.prs),legibility:Math.round(GS.leg),events:evCount,
         comply:c,refuse:r,subvert:s,archetype:arch.n,archetypeColor:arch.c,
         dayPct:tp*100,dayColor:tc,compPct:Math.round(c/mx*100),refPct:Math.round(r/mx*100),subPct:Math.round(s/mx*100),
-        cityEmotion:cmood.label,cityEmotionCol:cmood.col,vibeDist,vibeCompass:computeVibeCompass()};
+        cityEmotion:cmood.label,cityEmotionCol:cmood.col,vibeDist,vibeCompass:computeVibeCompass(),
+        playerTypeName:_pt.id!=='none'?_pt.name:null,playerTypeColor:_pt.col||'#7F77DD',
+        ...(() => { const d=getDistrict(PL.gx,PL.gy); return {district:d.n,districtCol:d.c}; })()};
     }
 
     function addBond(npc,type){
@@ -350,9 +452,14 @@ export default function GameScreen({ visible, config, onEnd }) {
     function closeEncounter(){setEncounter(null); nearCool=120;}
 
     function handleChoice(sc,ch){
+      // Apply player-type ability bonuses on top of the choice's base stat changes
+      let dl=ch.l, dp=ch.p;
+      if(_pt.id==='herald'&&ch.dc>0)             dl+=8;   // Broadcast: comply +8 leg
+      if((_pt.id==='shade'||_pt.id==='glitch')&&ch.ds>0) dp-=5;  // Ghost Walk / Cascade: subvert −5 prs
+      if(_pt.id==='broker'){dl+=2; dp-=2;}                // Adapt: all actions +2 leg −2 prs
       GS.comply+=ch.dc; GS.refuse+=ch.dr; GS.subvert+=ch.ds;
-      GS.leg=Math.max(0,Math.min(100,GS.leg+ch.l));
-      GS.prs=Math.max(0,Math.min(100,GS.prs+ch.p));
+      GS.leg=Math.max(0,Math.min(100,GS.leg+dl));
+      GS.prs=Math.max(0,Math.min(100,GS.prs+dp));
       GS.visitCount[sc.id]=(GS.visitCount[sc.id]||0)+1;
       npcs.filter(n=>Math.hypot(n.gx-sc.gx,n.gy-sc.gy)<3).slice(0,3).forEach(n=>{n.react=true;n.reactT=performance.now();});
       const pp=s2w(sc.gx,sc.gy,CW,CH);
@@ -367,7 +474,7 @@ export default function GameScreen({ visible, config, onEnd }) {
     }
 
     function handleBond(npc,type,act,ritual){
-      if(act&&act.e==='c'){GS.prs=Math.max(0,GS.prs-5); addBond(npc,'mutual');}
+      if(act&&act.e==='c'){GS.prs=Math.max(0,GS.prs-(_pt.id==='weaver'?10:5)); addBond(npc,'mutual');}
       else if(act&&act.e==='r'){GS.subvert++; addBond(npc,'clash');}
       if(ritual){
         if(ritual.id==='silence')   GS.prs=Math.max(0,GS.prs-12);
@@ -404,9 +511,24 @@ export default function GameScreen({ visible, config, onEnd }) {
       nearCool=200;
     }
 
+    function openBridgeEncounter(){
+      if(encOpenRef.current||GS.gameOver) return;
+      // Select scene by time-of-day; fall back to cycling through all three
+      const scene=BRIDGE_SCENES.find(s=>dayMinutes>=s.timeRange[0]&&dayMinutes<s.timeRange[1])
+        ||BRIDGE_SCENES[Math.floor(dayMinutes/480)%BRIDGE_SCENES.length];
+      // Stamp scene with player's current grid position so NPC reactions are centred correctly
+      const positioned={...scene,gx:Math.round(PL.gx),gy:Math.round(PL.gy)};
+      const pp=s2w(1.5,PL.gy,CW,CH);
+      addRings(pp.x,pp.y+T*.5,'#185FA5',3);
+      addSparks(pp.x,pp.y+T*.5,'#185FA5');
+      setEncounter({type:'bridge',scene:positioned});
+      pushFeed('Crossing the Grand Canal…');
+      nearCool=200;
+    }
+
     function clickNPC(npc){
       if(encOpenRef.current||GS.gameOver) return;
-      setEncounter({type:'npc',npc,matchScore:matchScore(npc)});
+      setEncounter({type:'npc',npc,matchScore:matchScore(npc),district:getDistrict(npc.gx,npc.gy)});
       const pp=s2w(npc.gx,npc.gy,CW,CH);
       addRings(pp.x,pp.y+T*.5,npc.col,2);
       pushFeed('Nearby: '+npc.name);
@@ -521,7 +643,7 @@ export default function GameScreen({ visible, config, onEnd }) {
       const dayRate=GS.simSpd/4*.0004;
       dayMinutes=(dayMinutes+dt*dayRate*20)%1440;
       const dn=dayMinutes/1440;
-      DAY_EVENTS.forEach(ev=>{if(!firedEvs.has(ev.id)&&dayMinutes>=ev.t&&dayMinutes<ev.t+5){firedEvs.add(ev.id);pushFeed(ev.msg);showAmbient(ev.msg);evCount++;}});
+      DAY_EVENTS.forEach(ev=>{if(!firedEvs.has(ev.id)&&dayMinutes>=ev.t&&dayMinutes<ev.t+5){firedEvs.add(ev.id);pushFeed(ev.msg);showAmbient(ev.msg);evCount++;if(_pt.id==='watcher')GS.prs=Math.max(0,GS.prs-4);}});
       if(dayMinutes<5&&firedEvs.size>0) firedEvs.clear();
       wTimer+=dt;if(wTimer>wNext){wTimer=0;wNext=8000+Math.random()*15000;const wl=WEATHERS.filter(w=>w!==weather);weather=wl[Math.floor(Math.random()*wl.length)];pushFeed('Weather: '+weather.toUpperCase());if(weather==='rain')initRain();}
       if(!encOpenRef.current){
@@ -535,6 +657,31 @@ export default function GameScreen({ visible, config, onEnd }) {
           const sr=GS.socR===1?2:GS.socR===3?4:3;
           for(const n of npcs){if(!n.bonded&&n.mood==='open'&&Math.hypot(PL.gx-n.gx,PL.gy-n.gy)<sr*.65&&Math.random()>.988){clickNPC(n);break;}}
         }
+        // ── Canal Vibe Match bloom ──────────────────────────────────────────
+        if(canalBloomCool<=0){
+          const pEmo=getPlayerEmotion();
+          const cMood=MOODS.find(m=>m.id===pEmo);
+          const nearCanal=Math.abs(PL.gx-1.5)<2.5;
+          if(nearCanal&&cMood){
+            const cMatch=npcs.find(n=>n.emotion===pEmo&&Math.abs(n.gx-1.5)<2.5&&Math.hypot(n.gx-PL.gx,n.gy-PL.gy)<4&&!n.bonded);
+            if(cMatch){
+              canalMatchRef.current={col:cMood.col,t:performance.now()};
+              canalBloomCool=240;
+              const mp=s2w(1.5,(PL.gy+cMatch.gy)/2,CW,CH);
+              addRings(mp.x,mp.y+T*.5,cMood.col,5);
+              addSparks(mp.x,mp.y+T*.5,cMood.col);
+              addFloat(mp.x,mp.y+T*.5-24,'CANAL RESONANCE',cMood.col);
+              pushFeed('Canal: '+pEmo+' resonance with '+cMatch.name);
+            }
+          }
+        }
+        if(canalBloomCool>0) canalBloomCool--;
+        else canalMatchRef.current=null;
+        // ── Bridge crossing detection ───────────────────────────────────────
+        const inCanalNow=PL.gx>0.5&&PL.gx<2.5;
+        if(inCanalNow&&!wasInCanal&&bridgeCool===0&&!GS.gameOver){openBridgeEncounter();}
+        if(bridgeCool>0) bridgeCool--;
+        wasInCanal=inCanalNow;
       }
       npcs.forEach(n=>tickNPC(n,dt));
       const tp=s2w(PL.gx,PL.gy,CW,CH);
@@ -544,7 +691,15 @@ export default function GameScreen({ visible, config, onEnd }) {
       const sky=skyCol(dn),grd=ctx.createLinearGradient(0,0,0,CH);
       grd.addColorStop(0,sky[0]);grd.addColorStop(1,sky[1]);ctx.fillStyle=grd;ctx.fillRect(0,0,CW,CH);
       ctx.save(); ctx.translate(cam.x,cam.y);
-      [...GND].sort((a,b)=>(a.gx+a.gy)-(b.gx+b.gy)).forEach(t=>{if(!t.bk)dGnd(ctx,t.gx,t.gy,dn,CW,CH);});
+      const cEmo=getPlayerEmotion();
+      [...GND].sort((a,b)=>(a.gx+a.gy)-(b.gx+b.gy)).forEach(t=>{
+        if(!t.bk){
+          if(t.gx===1||t.gx===2) dCanal(ctx,t.gx,t.gy,dn,cEmo,ts,canalMatchRef.current,CW,CH);
+          else dGnd(ctx,t.gx,t.gy,dn,CW,CH);
+        }
+      });
+      dDistrictLabels(ctx,ts,CW,CH);
+      dDorsoduoGlow(ctx,dn,ts,CW,CH);
       if(heatmapRef.current) dVibeHeatmap(ctx,npcs,ts,CW,CH);
       [...BLDGS].sort((a,b)=>(a.gx+a.gy)-(b.gx+b.gy)).forEach(b=>{
         dTile(ctx,b.gx,b.gy,b.t,b.s,b.d,b.h,CW,CH);
@@ -554,7 +709,7 @@ export default function GameScreen({ visible, config, onEnd }) {
       dResonanceClusters(ctx,npcs,ts,CW,CH);
       const objs=[...npcs.map(n=>({...n,_p:false})),{gx:PL.gx,gy:PL.gy,_p:true}];
       objs.sort((a,b)=>(a.gx+a.gy)-(b.gx+b.gy)).forEach(o=>{
-        if(o._p) dPlayer(ctx,PL,ts,config.traits,getPlayerEmotion(),CW,CH);
+        if(o._p) dPlayer(ctx,PL,ts,mergedTraits,getPlayerEmotion(),CW,CH);
         else dNPC(ctx,o,ts,dn,npcs,PL,GS.socR,GS.prt,matchScore,CW,CH);
       });
       rings=rings.filter(rg=>{rg.r+=rg.sp;rg.a-=.017;if(rg.a<=0||rg.r>=rg.mR)return false;ctx.beginPath();ctx.arc(rg.x,rg.y,rg.r,0,Math.PI*2);ctx.strokeStyle=rg.col;ctx.lineWidth=.8;ctx.globalAlpha=rg.a;ctx.stroke();ctx.globalAlpha=1;return true;});
@@ -591,9 +746,19 @@ export default function GameScreen({ visible, config, onEnd }) {
 
         {/* HUD top bar */}
         <div id="htop">
-          <div className="hp">
-            <span style={{display:'inline-block',width:5,height:5,borderRadius:'50%',background:'#5DCAA5',marginRight:4,verticalAlign:'middle',animation:'blink 1.5s infinite'}}/>
-            PROTOCOL CITY
+          <div style={{display:'flex',flexDirection:'column',gap:3}}>
+            <div className="hp">
+              <span style={{display:'inline-block',width:5,height:5,borderRadius:'50%',background:'#5DCAA5',marginRight:4,verticalAlign:'middle',animation:'blink 1.5s infinite'}}/>
+              NEO-VENEZIA
+            </div>
+            <div className="hp" style={{borderColor:hud.districtCol+'44',letterSpacing:'.08em'}}>
+              <b style={{color:hud.districtCol}}>{hud.district}</b>
+            </div>
+            {hud.playerTypeName&&(
+              <div className="hp" style={{borderColor:hud.playerTypeColor+'44',letterSpacing:'.08em'}}>
+                <b style={{color:hud.playerTypeColor}}>{hud.playerTypeName}</b>
+              </div>
+            )}
           </div>
           <div style={{display:'flex',gap:4,flexWrap:'wrap',justifyContent:'flex-end'}}>
             <div className="hp ev">TIME <b>{hud.time}</b></div>

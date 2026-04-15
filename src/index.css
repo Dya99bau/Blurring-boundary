@@ -151,6 +151,26 @@ canvas#C{display:block;width:100%;height:100%;}
 .endb:hover{transform:translateY(-1px);}
 @keyframes blink{0%,60%{opacity:1;}61%,100%{opacity:.2;}}
 
+/* ── NPC Dialogue ─────────────────────────────────────────────────────────── */
+/* The NPC's spoken voice — first-person, italic, blockquote style */
+.nv-voice{font-size:11.5px;line-height:1.9;color:rgba(210,205,240,.82);font-weight:300;font-style:italic;
+  border-left:2px solid rgba(83,74,183,.35);padding:3px 0 3px 10px;margin-bottom:10px;}
+/* Signal tag badges — aligned (green) and repelled (orange) */
+.nv-tagrow{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;}
+.nv-tag{font-family:'Space Mono',monospace;font-size:6px;letter-spacing:.06em;padding:2px 7px;
+  border-radius:12px;border:.5px solid rgba(83,74,183,.22);color:rgba(175,169,236,.4);}
+.nv-a{border-color:rgba(93,202,165,.28);color:#8ED8BE;}
+.nv-r{border-color:rgba(216,90,48,.28);color:#E09070;}
+/* Their protocol stance in their own words */
+.nv-proto{font-family:'Space Mono',monospace;font-size:7.5px;color:rgba(175,169,236,.32);
+  margin-bottom:9px;line-height:1.65;padding-left:2px;}
+/* Resonance / clash / neutral observation */
+.nv-match{font-family:'Space Mono',monospace;font-size:7.5px;line-height:1.7;margin-bottom:10px;
+  border-radius:6px;padding:5px 9px;border:.5px solid;}
+.nv-match.mutual{background:rgba(93,202,165,.05);border-color:rgba(93,202,165,.2);color:#8ED8BE;}
+.nv-match.clash{background:rgba(216,90,48,.05);border-color:rgba(216,90,48,.2);color:#E09070;}
+.nv-match.neutral{background:rgba(83,74,183,.04);border-color:rgba(83,74,183,.18);color:rgba(175,169,236,.45);}
+
 /* ── Mood system ──────────────────────────────────────────────────────────── */
 /* Visible emotional state badge shown in NPC encounters */
 .emood{font-family:'Space Mono',monospace;font-size:6.5px;letter-spacing:.12em;padding:3px 9px;border-radius:20px;border:.5px solid;display:inline-block;margin-bottom:9px;line-height:1.6;}
@@ -159,6 +179,34 @@ canvas#C{display:block;width:100%;height:100%;}
 .ebonded{background:rgba(93,202,165,.04);border:.5px solid rgba(93,202,165,.18);border-radius:8px;padding:9px 12px;margin-bottom:10px;}
 .ebdepth{font-family:'Space Mono',monospace;font-size:8px;font-weight:700;letter-spacing:.14em;margin-bottom:4px;}
 .ebdesc{font-size:10px;color:rgba(175,169,236,.5);line-height:1.7;}
+
+/* ── Player Select Screen ───────────────────────────────────────────────────── */
+#scr-psel{background:#02020a;padding:18px 16px 24px;gap:0;overflow-y:auto;justify-content:flex-start;}
+.psg{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;width:100%;max-width:590px;margin-bottom:14px;}
+@media(max-width:520px){.psg{grid-template-columns:repeat(2,1fr);}}
+.psc{border:.5px solid rgba(83,74,183,.2);border-radius:12px;padding:12px 10px;cursor:pointer;
+  transition:all .2s;background:rgba(255,255,255,.02);text-align:center;display:flex;flex-direction:column;align-items:center;gap:5px;}
+.psc:hover{border-color:rgba(83,74,183,.45);background:rgba(83,74,183,.05);transform:translateY(-2px);}
+.psc:active{transform:scale(.97);}
+.pssel{transform:translateY(-2px);}
+/* Avatar circle */
+.psav{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.psaura{width:16px;height:16px;border-radius:50%;}
+/* Card text */
+.psname{font-family:'Space Mono',monospace;font-size:8px;font-weight:700;letter-spacing:.09em;color:rgba(175,169,236,.75);transition:color .2s;}
+.pstag{font-family:'Space Mono',monospace;font-size:6px;letter-spacing:.06em;color:rgba(175,169,236,.3);line-height:1.5;}
+/* Stat bars */
+.psstats{width:100%;display:flex;flex-direction:column;gap:2px;margin-top:2px;}
+.pssrow{display:flex;align-items:center;gap:4px;}
+.pssl{font-family:'Space Mono',monospace;font-size:5.5px;letter-spacing:.06em;color:rgba(175,169,236,.28);width:20px;flex-shrink:0;}
+.pssbar{flex:1;height:2px;background:rgba(255,255,255,.06);border-radius:1px;}
+.pssfill{height:100%;border-radius:1px;transition:width .4s;}
+/* Ability badge */
+.psabil{font-family:'Space Mono',monospace;font-size:5.5px;letter-spacing:.04em;border:.5px solid;border-radius:6px;
+  padding:3px 6px;line-height:1.5;text-align:center;margin-top:3px;width:100%;}
+/* Description shown below grid when a card is selected */
+.psdesc{max-width:580px;width:100%;font-family:'Space Mono',monospace;font-size:8px;line-height:1.8;
+  border:.5px solid;border-radius:8px;padding:8px 12px;margin-bottom:14px;text-align:center;}
 
 /* ── Vibe Heatmap & Compass ─────────────────────────────────────────────────── */
 /* City mood distribution bars inside social graph */

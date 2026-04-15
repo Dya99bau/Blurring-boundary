@@ -39,12 +39,12 @@ export default function IntroScreen({ visible, onStart }) {
 
   return (
     <div className={`scr${visible ? ' on' : ''}`} id="scr-intro">
-      <div className="gl">PROTOCOL CITY · SIMULATION MODE</div>
-      <div className="ttl">Protocol City</div>
-      <div className="sub">live simulation · autonomous agents · emergent behavior</div>
+      <div className="gl">NEO-VENEZIA · SOCIAL SIMULATION</div>
+      <div className="ttl">Neo-Venezia</div>
+      <div className="sub">live simulation · the city breathes with you · bio-digital baroque</div>
       <div className="desc">
-        A city that <em>runs without you</em>. NPCs form bonds, cluster, argue, drift.
-        Day cycles into night. Protocols activate and collapse. Walk through it — or watch it happen.
+        A futuristic Venice where <em>the city reacts to your mood</em>. NPCs bond, cluster, argue, drift.
+        Canal water shifts with your aura. Protocols activate and collapse. Walk through it — or watch it happen.
       </div>
 
       <div className="tsec">

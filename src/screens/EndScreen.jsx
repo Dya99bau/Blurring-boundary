@@ -22,7 +22,7 @@ export default function EndScreen({ visible, endData, onReconfigure, onRestart }
 
   return (
     <div className={`scr${visible ? ' on' : ''}`} id="scr-end">
-      <div className="eey2">SESSION COMPLETE · PROTOCOL CITY SIMULATION</div>
+      <div className="eey2">SESSION COMPLETE · NEO-VENEZIA</div>
       <div className="ea" style={{ color: arch.c }}>{arch.n}</div>
       <div className="es2">{arch.s}</div>
 

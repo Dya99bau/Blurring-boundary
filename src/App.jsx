@@ -1,10 +1,11 @@
 import { useState, useRef } from 'react';
 import IntroScreen from './screens/IntroScreen';
+import PlayerSelectScreen from './screens/PlayerSelectScreen';
 import GameScreen from './screens/GameScreen';
 import EndScreen from './screens/EndScreen';
 
 export default function App() {
-  const [screen, setScreen] = useState('intro'); // 'intro' | 'game' | 'end'
+  const [screen, setScreen] = useState('intro'); // 'intro' | 'playerSelect' | 'game' | 'end'
   const [veilOn, setVeilOn] = useState(false);
   const [titleData, setTitleData] = useState(null); // { title, sub, eye } | null
   const [config, setConfig] = useState(null);
@@ -30,7 +31,12 @@ export default function App() {
   function handleStart(cfg) {
     setConfig(cfg);
     setEndData(null);
-    showScreen('game', 'Protocol City', 'Live simulation. Walk through it.', 'ENTERING');
+    showScreen('playerSelect', 'Neo-Venezia', 'Choose your presence.', 'IDENTITY');
+  }
+
+  function handlePlayerSelect(playerType) {
+    setConfig(prev => ({ ...prev, playerType }));
+    showScreen('game', 'Neo-Venezia', 'The city breathes with you.', 'ENTERING');
   }
 
   function handleEnd(data) {
@@ -39,7 +45,7 @@ export default function App() {
   }
 
   function handleRestart() {
-    showScreen('game', 'Protocol City', 'The city remembers.', 'RETURNING');
+    showScreen('game', 'Neo-Venezia', 'The water remembers.', 'RETURNING');
   }
 
   function handleReconfigure() {
@@ -49,6 +55,8 @@ export default function App() {
   return (
     <div id="app">
       <IntroScreen visible={screen === 'intro'} onStart={handleStart} />
+
+      <PlayerSelectScreen visible={screen === 'playerSelect'} onSelect={handlePlayerSelect} />
 
       {config && (
         <GameScreen

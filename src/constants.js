@@ -26,64 +26,67 @@ export const DAY_EVENTS = [
 ];
 
 export const SCENES = [
-  {id:'transit',gx:0,gy:0,h:2,label:'Transit Node',col:'#534AB7',loc:'TRANSIT NODE · 07:43',
-   story:`Every person shows a <em>mood aura</em> — visible to all nearby devices. Your profile is blank. Six strangers see the gap. A push: <b>"Enable mood sharing to reduce friction."</b>`,
-   mem:`The city holds your last choice. Strangers already know your gap.`,
+  {id:'acqua_alta',gx:0,gy:0,h:2,label:'Acqua Alta Gate',col:'#534AB7',loc:'GRAND CANAL · 07:43',district:'San Marco',
+   story:`The Acqua Alta transit gate requires a <em>mood aura pulse</em> — visible to all canal sensors. Your aura is blank. Six travellers see the gap. A push: <b>"Enable aura transit to reduce friction."</b>`,
+   mem:`The canal holds your last crossing. The water remembers your gap.`,
    choices:[
-     {b:'COMPLY',t:'Enable aura · blend in',y:'g',c:`Amber aura blooms. Three strangers relax. You paid something nameless.`,dc:1,dr:0,ds:0,l:20,p:-10},
-     {b:'REFUSE',t:'Stay blank · own the gap',y:'b',c:`Protocol flags you "unresolved presence." A stranger steps away.`,dc:0,dr:1,ds:0,l:-18,p:22},
-     {b:'SUBVERT',t:'Mood: "fully absent"',y:'w',c:`A void-aura. Someone laughs. The system has no category for you.`,dc:0,dr:0,ds:1,l:8,p:8},
-     {b:'OBSERVE',t:'Watch · decide nothing',y:'w',c:`The auras are honest in ways faces aren't. You haven't chosen.`,dc:0,dr:0,ds:0,l:0,p:-5},
+     {b:'COMPLY',t:'Pulse aura · enter the canal',y:'g',c:`Amber aura blooms across the water. Three travellers relax. You gave something the canal now holds.`,dc:1,dr:0,ds:0,l:20,p:-10},
+     {b:'REFUSE',t:'Stay dark · own the blank',y:'b',c:`The gate flags you "unresolved presence." A gondolier steers wide.`,dc:0,dr:1,ds:0,l:-18,p:22},
+     {b:'SUBVERT',t:'Aura: "fully absent"',y:'w',c:`A void-signal on the water. Someone laughs from the fondamenta. The system has no category for you.`,dc:0,dr:0,ds:1,l:8,p:8},
+     {b:'OBSERVE',t:'Watch · decide nothing',y:'w',c:`The auras on the water are honest in ways faces aren't. You haven't crossed yet.`,dc:0,dr:0,ds:0,l:0,p:-5},
    ]},
-  {id:'park',gx:5,gy:-2,h:1,label:'Park Bench',col:'#1D9E75',loc:'PARK BENCH · 12:06',
-   story:`9 minutes seated. At 10, a <em>territorial marker</em> blooms — your name on the shared map. Two people watch your timer. <b>"Why does that person own the bench?"</b>`,
-   mem:`A ghost of your last visit lingers. The protocol hasn't cleared it.`,
+  {id:'arsenale_dock',gx:5,gy:-2,h:1,label:'Arsenale Dock',col:'#BA7517',loc:'ARSENALE DOCKS · 12:06',district:'Arsenale',
+   story:`9 minutes at this worker's bench. At 10, a <em>territorial marker</em> blooms on the dock diagram — your name on the shared map. Two workers watch your timer. <b>"Why does that person own the bench?"</b>`,
+   mem:`A ghost of your last shift lingers on the diagram. The protocol hasn't cleared it.`,
    choices:[
-     {b:'CLAIM',t:'Stay · earn territory',y:'g',c:`The marker appears. Satisfaction and shame in equal parts.`,dc:1,dr:0,ds:0,l:20,p:-8},
-     {b:'LEAVE',t:'Stand up at 9:58',y:'b',c:`Timer resets. A stranger claims it later.`,dc:0,dr:1,ds:0,l:-15,p:-18},
-     {b:'GIFT',t:'Give marker to a child',y:'w',c:`Her phone buzzes. She doesn't understand. Her mother smiles.`,dc:0,dr:0,ds:1,l:4,p:4},
-     {b:'SIT',t:'Stay · ignore the circle',y:'w',c:`Marker appears. Nobody can read your relationship to it.`,dc:0,dr:0,ds:0,l:18,p:0},
+     {b:'CLAIM',t:'Stay · earn the position',y:'g',c:`The marker appears. Satisfaction and shame in equal parts.`,dc:1,dr:0,ds:0,l:20,p:-8},
+     {b:'LEAVE',t:'Stand up at 9:58',y:'b',c:`Timer resets. A worker claims it later.`,dc:0,dr:1,ds:0,l:-15,p:-18},
+     {b:'GIFT',t:'Transfer marker to apprentice',y:'w',c:`Their device buzzes. They don't understand. Their mentor smiles.`,dc:0,dr:0,ds:1,l:4,p:4},
+     {b:'SIT',t:'Stay · ignore the marker',y:'w',c:`Marker appears. Nobody can read your relationship to it.`,dc:0,dr:0,ds:0,l:18,p:0},
    ]},
-  {id:'cafe',gx:-4,gy:2,h:2,label:'Café Counter',col:'#BA7517',loc:'CAFÉ COUNTER · 14:20',
-   story:`The 8-second gaze protocol active. The person opposite has looked your way for <em>6 seconds</em>. At 8, you receive one of their thoughts involuntarily. <b>"By entering, you participate."</b>`,
-   mem:`Your previous choice left a trace. The café's model shifted 2% because of you.`,
+  {id:'cannaregio_campo',gx:-4,gy:2,h:2,label:'Cannaregio Campo',col:'#1D9E75',loc:'CANNAREGIO · 14:20',district:'Cannaregio',
+   story:`The 8-second gaze protocol active. A neighbour across the campo has looked your way for <em>6 seconds</em>. At 8, you receive one of their thoughts involuntarily. <b>"By living here, you participate."</b>`,
+   mem:`Your previous choice left a trace in the filament display. The campo shifted 2% because of you.`,
    choices:[
-     {b:'RECEIVE',t:'Hold gaze · accept thought',y:'w',c:`"I haven't spoken to anyone today." Something real moved between strangers.`,dc:1,dr:0,ds:0,l:22,p:-5},
-     {b:'REFUSE',t:'Break at 7 sec',y:'b',c:`Protocol broadcasts: "opted out at this seat, 14:21."`,dc:0,dr:1,ds:0,l:-14,p:20},
-     {b:'SEND FIRST',t:'Pre-load thought · control',y:'g',c:`You send: "this system is watching us." Reply: "I know. I use it anyway."`,dc:0,dr:0,ds:1,l:14,p:9},
+     {b:'RECEIVE',t:'Hold gaze · accept thought',y:'w',c:`"I haven't spoken to anyone today." Something real moved between neighbours.`,dc:1,dr:0,ds:0,l:22,p:-5},
+     {b:'REFUSE',t:'Break at 7 sec',y:'b',c:`Protocol broadcasts: "opted out at this window, 14:21."`,dc:0,dr:1,ds:0,l:-14,p:20},
+     {b:'SEND FIRST',t:'Pre-load thought · control',y:'g',c:`You send: "this campo is watching us." Reply: "I know. I live here anyway."`,dc:0,dr:0,ds:1,l:14,p:9},
      {b:'CLOSE EYES',t:'Make gaze impossible',y:'b',c:`30 seconds, eyes closed. Their thought is addressed to no one.`,dc:0,dr:0,ds:0,l:0,p:14},
    ]},
-  {id:'market',gx:4,gy:4,h:2,label:'Market Square',col:'#D85A30',loc:'MARKET SQUARE · 11:30',
-   story:`A cluster of 7 shows a <em>shared object</em> — a 1987 memory unlocked when 5+ gather. <b>"Come stand with us. Just be physically present."</b>`,
-   mem:`Last time you stood here, you left before the object appeared.`,
+  {id:'smart_bridge',gx:4,gy:4,h:2,label:'Smart Bridge',col:'#D85A30',loc:'ARSENALE BRIDGE · 11:30',district:'Arsenale',
+   story:`A cluster of 7 workers triggers a <em>shared memory object</em> — a 1797 vision unlocked when 5+ stand together on the bridge. <b>"Come stand with us. Just be physically here."</b>`,
+   mem:`Last time you stood here, you left before the memory surfaced.`,
    choices:[
-     {b:'JOIN',t:'Step in · experience it',y:'g',c:`Market sounds from 1987. A child laughing. Five strangers share a stranger's memory.`,dc:1,dr:0,ds:0,l:24,p:-16},
-     {b:'DECLINE',t:'Stay outside · watch',y:'b',c:`Their faces change. You are 3 metres away in a different experience of the same place.`,dc:0,dr:1,ds:0,l:-22,p:24},
-     {b:'JOIN→LEAVE',t:'Enter · then step out',y:'w',c:`4 seconds of the shared object. Enough to know it's a memory, not a product.`,dc:0,dr:0,ds:1,l:9,p:9},
+     {b:'JOIN',t:'Step on · experience it',y:'g',c:`Canal sounds from 1797. A shipwright hammering. Five strangers share a stranger's hands.`,dc:1,dr:0,ds:0,l:24,p:-16},
+     {b:'DECLINE',t:'Stay on the bank · watch',y:'b',c:`Their faces change. You are 3 metres away in a different experience of the same bridge.`,dc:0,dr:1,ds:0,l:-22,p:24},
+     {b:'JOIN→LEAVE',t:'Enter · then step off',y:'w',c:`4 seconds of the shared memory. Enough to know it's a life, not a spectacle.`,dc:0,dr:0,ds:1,l:9,p:9},
      {b:'DOCUMENT',t:'Photograph the group',y:'w',c:`5 people with the same stunned expression. The photo shows nothing they're seeing.`,dc:0,dr:0,ds:0,l:4,p:0},
    ]},
-  {id:'plaza',gx:-1,gy:6,h:1,label:'Plaza · Dusk',col:'#7F77DD',loc:'RESIDENTIAL PLAZA · 19:55',
-   story:`The plaza's <em>collective mood vote</em> open. Positive → lighting warms. Negative → dims. A teenager nearby, phone off: <b>"I stopped voting two months ago. I just watch it now."</b>`,
-   mem:`The light is the same shade it was when you last voted. You made this.`,
+  {id:'dorsoduro_fondamenta',gx:-1,gy:6,h:1,label:'Dorsoduro Fondamenta',col:'#185FA5',loc:'DORSODURO · 19:55',district:'Dorsoduro',
+   story:`The canal's <em>bioluminescent vote</em> is open. Positive → barnacles brighten the sunken fondamenta. Negative → dims. A teenager nearby, device off: <b>"I stopped voting two months ago. I just watch the water now."</b>`,
+   mem:`The canal is the same shade it was when you last voted. You made this light.`,
    choices:[
-     {b:'VOTE +',t:'Vote warmth · shape the space',y:'g',c:`Light shifts — barely warmer. A chord with no instrument plays 4 seconds.`,dc:1,dr:0,ds:0,l:18,p:-14},
-     {b:'ABSTAIN',t:'Let window close',y:'b',c:`The atmosphere is someone else's feeling. Peaceful and not yours.`,dc:0,dr:1,ds:0,l:-18,p:10},
-     {b:'VOTE −',t:'Vote disruption',y:'w',c:`Light dims. The teenager laughs — short, real.`,dc:0,dr:0,ds:1,l:9,p:19},
+     {b:'VOTE +',t:'Feed warmth · shape the water',y:'g',c:`Canal shifts — barely warmer. A deep chord plays through the stone for 4 seconds.`,dc:1,dr:0,ds:0,l:18,p:-14},
+     {b:'ABSTAIN',t:'Let the window close',y:'b',c:`The bioluminescence is someone else's feeling. Peaceful and not yours.`,dc:0,dr:1,ds:0,l:-18,p:10},
+     {b:'VOTE −',t:'Vote disruption',y:'w',c:`Canal dims. The teenager laughs — short, real.`,dc:0,dr:0,ds:1,l:9,p:19},
      {b:'ASK HER',t:'Ask what she sees now',y:'g',c:`"I see everyone else's feelings and none of mine. It's kind of beautiful."`,dc:0,dr:0,ds:0,l:0,p:-12},
    ]},
 ];
 
+// Bldg colors follow Bio-Digital Baroque district palette:
+// San Marco (center): warm limestone  Arsenale (east gx≥3): cool industrial
+// Cannaregio (west/north): mossy warm  Dorsoduro (south gy≥5): dark lagoon
 export const BLDGS = [
-  {gx:-3,gy:-2,h:5,t:'#1e1e40',s:'#10102a',d:'#0c0c1e'},
-  {gx:1,gy:-4,h:7,t:'#141430',s:'#0d0d25',d:'#090918'},
-  {gx:6,gy:0,h:3,t:'#1a2a1a',s:'#111f11',d:'#0d160d'},
-  {gx:-5,gy:3,h:4,t:'#2a1a10',s:'#1e1208',d:'#150d05'},
-  {gx:2,gy:7,h:3,t:'#1e1e3a',s:'#141430',d:'#0e0e22'},
-  {gx:-3,gy:6,h:2,t:'#181828',s:'#101020',d:'#0c0c18'},
-  {gx:7,gy:-2,h:5,t:'#121f12',s:'#0c180c',d:'#09110c'},
-  {gx:-6,gy:5,h:3,t:'#281a0c',s:'#1c1208',d:'#130d05'},
-  {gx:3,gy:-3,h:4,t:'#1c1c38',s:'#12122a',d:'#0e0e1e'},
-  {gx:-2,gy:4,h:3,t:'#201820',s:'#181018',d:'#100c10'},
+  {gx:-3,gy:-2,h:5,t:'#1e1c18',s:'#141210',d:'#0f0e0c'}, // Cannaregio: warm stone tower
+  {gx:1,gy:-4,h:7,t:'#181e24',s:'#10141a',d:'#0c1014'}, // North canal: tall blue-grey
+  {gx:6,gy:0,h:3,t:'#161c1e',s:'#0f1315',d:'#0b0f10'}, // Arsenale: industrial slate
+  {gx:-5,gy:3,h:4,t:'#1c1a14',s:'#13110e',d:'#0e0c09'}, // Cannaregio: moss-amber
+  {gx:2,gy:7,h:3,t:'#0c1418',s:'#080f12',d:'#060b0e'}, // Dorsoduro: lagoon-dark
+  {gx:-3,gy:6,h:2,t:'#0e1418',s:'#09101a',d:'#060c10'}, // Dorsoduro: sunken ruin
+  {gx:7,gy:-2,h:5,t:'#141a1c',s:'#0e1214',d:'#0a0e10'}, // Arsenale: tall foundry
+  {gx:-6,gy:5,h:3,t:'#181c14',s:'#10140e',d:'#0c100a'}, // Far-west: overgrown
+  {gx:3,gy:-3,h:4,t:'#16181e',s:'#0f1016',d:'#0b0c12'}, // Arsenale: tech block
+  {gx:-2,gy:4,h:3,t:'#141816',s:'#0e1110',d:'#090c0b'}, // San Marco edge: neutral
 ];
 
 // Pre-compute ground tiles (excludes building & scene positions)
@@ -131,3 +134,208 @@ export const MOODS = [
 
 // Bond depth labels — how a connection evolves over encounters
 export const BOND_DEPTHS = ['acquaintance','familiar','close','bonded'];
+
+// ── Smart Bridge crossing encounters (Grand Canal gx 1–2) ─────────────────────
+// Three scenes selected by time-of-day. Choices share the same dc/dr/ds/l/p format.
+export const BRIDGE_SCENES = [
+  {
+    id:'bridge_morning',gx:1,gy:2,h:1,
+    col:'#185FA5',loc:'GRAND CANAL · BRIDGE · MORNING',
+    timeRange:[360,840],
+    story:`You step onto the Smart Bridge. The piezoelectric mesh reads your step — adds your weight to the data. The handrail warms the moment you touch it. A counter materialises above the arch: <em>847 crossings today</em>. You are not the first. <b>The bridge asks: register this crossing?</b>`,
+    choices:[
+      {b:'REGISTER',t:'Log the crossing · be counted',y:'g',c:`Your crossing joins the record. The handrail glows briefly in your Aura color. You gave the canal something it will keep.`,dc:1,dr:0,ds:0,l:12,p:-6},
+      {b:'CROSS DARK',t:'No signal · just walk',y:'b',c:`The counter doesn't change. A gap appears in the data. You made it across as no one.`,dc:0,dr:1,ds:0,l:-10,p:8},
+      {b:'PAUSE',t:'Stand mid-bridge · look at the water',y:'w',c:`The canal below shows three layers of history. You can almost read them. The bridge waits.`,dc:0,dr:0,ds:0,l:3,p:-4},
+    ],
+  },
+  {
+    id:'bridge_echo',gx:1,gy:2,h:1,
+    col:'#185FA5',loc:'GRAND CANAL · BRIDGE · MIDDAY',
+    timeRange:[840,1200],
+    story:`Halfway across. The bridge's resonance mesh detects two matched Aura fields — yours, and someone approaching from the other side. They slow down. You're both aware. <b>The bridge has already logged it as a Vibe Match. You haven't spoken yet.</b>`,
+    choices:[
+      {b:'ACKNOWLEDGE',t:'Turn and hold the moment',y:'g',c:`A stranger. Your emotion, different face. You nod. The bridge glow beneath the arch lasts 30 seconds after you both leave.`,dc:0,dr:0,ds:0,l:8,p:-10},
+      {b:'KEEP WALKING',t:'Let the match pass unacknowledged',y:'b',c:`The bridge records a matched crossing with no social contact. A Vibe Match with no witness.`,dc:0,dr:1,ds:0,l:-5,p:4},
+      {b:'SUBVERT',t:'Shift your Aura · break the match',y:'w',c:`The reading changes mid-bridge. The other person looks briefly confused. You kept the moment for yourself.`,dc:0,dr:0,ds:1,l:5,p:6},
+    ],
+  },
+  {
+    id:'bridge_night',gx:1,gy:2,h:1,
+    col:'#185FA5',loc:'GRAND CANAL · BRIDGE · NIGHT',
+    timeRange:[1200,1440],
+    story:`Night. The bridge's daytime protocol goes dark — reading suspended. Below, the canal bioluminescence is all that's visible: teal and indigo, slow-moving. <b>One of the few moments in Neo-Venezia when the city doesn't know exactly where you are.</b>`,
+    choices:[
+      {b:'CROSS DARK',t:'Walk untracked · be briefly free',y:'w',c:`30 seconds of being unlocated. The canal holds your reflection anyway. You made it.`,dc:0,dr:1,ds:0,l:-8,p:-14},
+      {b:'ENABLE AURA',t:'Light yourself up anyway',y:'g',c:`Your Aura on the night water. You chose visibility when you didn't have to. The city noted this.`,dc:1,dr:0,ds:0,l:16,p:-8},
+      {b:'STAY',t:'Sit on the bridge · wait',y:'w',c:`You stay until the protocol reactivates. For a few minutes the bridge belonged to you and no record.`,dc:0,dr:0,ds:1,l:4,p:-10},
+    ],
+  },
+];
+
+// ── NPC Dialogue System ────────────────────────────────────────────────────────
+// Lines are selected deterministically from the NPC's id so each person
+// always says the same thing — they have a consistent voice.
+
+export const NPC_DIALOGUE = {
+  openings: {
+    joyful: [
+      "The water's doing something today. Come look.",
+      "Someone returned my canal-signal from last week. I didn't think anyone would.",
+      "I don't usually talk to strangers but today feels different.",
+      "The barnacles outside my building have been glowing since morning.",
+    ],
+    melancholic: [
+      "The filament display on my street has been blue for three weeks.",
+      "I've been watching the same bridge for an hour. I don't know why.",
+      "The canal was cleaner when I first moved here. Or maybe I just remember it that way.",
+      "I keep thinking about a conversation I had here months ago. I can't remember what we said.",
+    ],
+    anxious: [
+      "Have you counted the sensors on this corner? I get to seven.",
+      "My pressure index hit 84 this morning. I'm trying to walk it down.",
+      "The protocol sent me three nudges before I left the house.",
+      "I don't know who's reading my aura right now. That's not a small thing.",
+    ],
+    calm: [
+      "I get here before the morning rush. It's a different city at this hour.",
+      "I turned my aura broadcast off last year. The city gets quieter without it.",
+      "There's a kind of peace in being unread.",
+      "I come here most days. Nothing ever happens. That's why I come.",
+    ],
+    lonely: [
+      "I haven't had a real conversation in four days. The protocol doesn't count.",
+      "Everyone I knew has left this district. The buildings still have their old filament colors.",
+      "I keep walking the same route. I think I'm looking for something.",
+      "The city knows I'm here. That's not the same as anyone knowing I'm here.",
+    ],
+    curious: [
+      "I found something in the canal sediment yesterday. Still trying to understand it.",
+      "Have you watched how the water changes near the Smart Bridge? It's not random.",
+      "I've been mapping the Protocol Barnacle clusters. There's a pattern nobody's named yet.",
+      "I've been coming here for weeks trying to understand why this corner feels different.",
+    ],
+  },
+  traits: {
+    solitude:    ["I work best when nobody can find me.", "The unregistered quarter exists for people like me."],
+    collective:  ["Eight of us eat here every day. The protocol calls it a cluster.", "I believe in shared space — not the protocol's version. The older kind."],
+    surveillance:["I've been watching this corner for months. The patterns are interesting.", "I don't mind being seen. I just want to choose what they see."],
+    privacy:     ["I disabled my aura broadcast two years ago. People still notice the gap.", "I keep my signal tags to myself. That's the point of having them."],
+    visibility:  ["I want the city to know I'm here. I want it on record.", "Full broadcast, all day. I have nothing to hide and several things to prove."],
+    anonymity:   ["I have three registered personas. None of them are me.", "The void-signal is a legitimate choice. The protocol just doesn't know what to do with it."],
+    ritual:      ["We do a silence zone every Tuesday on the Smart Bridge. Ten seconds. It's enough.", "Rituals are the city's immune system. Without them, protocol is everything."],
+    disruption:  ["I put a false mood tag in the canal data last week. Nothing happened. That was the point.", "The glitch is a form of communication. I'm still figuring out the message."],
+    memory:      ["I've lived here 40 years. The city has a different shape in my head than on the map.", "My grandmother's aura data is in the canal sediment somewhere. I think about that."],
+    presence:    ["I'm here because I chose to be here. That's different from just showing up.", "I log my location every hour. Not for the protocol. For myself."],
+    refusal:     ["I say no to about 70% of what the protocol asks. The other 30% I haven't decided.", "The city functions fine without my compliance. It just pretends otherwise."],
+    consent:     ["I read every agreement before signing. People think that's strange.", "Consent means I could have said no. The protocol doesn't always offer that option."],
+  },
+  districts: {
+    'san marco':  ["The Piazza knows when it's being used. The stones hold it.", "I've watched the Campanile broadcast a color I didn't recognize. Someone feels something I don't have a word for."],
+    'arsenale':   ["The foundry runs on three shifts. I've worked all of them.", "We built the city's nervous system here. Now it builds ours."],
+    'cannaregio': ["My neighbour's display has been amber for a week. Something good happened.", "The calli here are narrow enough that you hear everything. I've stopped minding."],
+    'dorsoduro':  ["I moved here because the city reads poorly in this district. Fewer nudges.", "There's a room below the waterline two buildings over. I found it on a dive."],
+    'grand canal':["The water carries old signals. You can feel it if you're in it long enough.", "I watched someone's aura dissolve into the canal once. Like dye. Like it was glad to be water."],
+  },
+  protocol: {
+    comply: ["The system works if you let it. I let it.", "I comply where it costs me little. I've made my peace with that.", "My legibility is 87. The city offers real things in return."],
+    refuse: ["I haven't updated my aura profile in two years. They can work with what they have.", "Refusal is a form of communication. I'm communicating constantly.", "My pressure is high. My legibility is low. I consider that a success."],
+  },
+  match: {
+    mutual:  ["I noticed your signal before you got close. That doesn't happen often.", "We have overlapping tags. The protocol already knows. We don't have to let that be the whole story.", "Something between your signal and mine — the city registers it. I prefer to call it something else."],
+    clash:   ["Our tags conflict. The protocol has already logged it.", "I don't dislike you for having different signals. I just don't know what to do with the gap.", "The friction is real. We could ignore it, or we could look at it directly."],
+    neutral: ["You're here. I'm here. The protocol notes it as proximity.", "I don't know what to make of you yet. That's honest.", "We haven't said enough to be anything to each other yet."],
+  },
+};
+
+// Returns composed dialogue for an NPC encounter.
+// Selection is deterministic per NPC so each person has a consistent voice.
+export function pickNPCDialogue(npc, matchScore, districtName) {
+  const h = parseInt(npc.id.replace('n','')) || 0;
+  const pick = (arr, offset=0) => (arr && arr.length) ? arr[(h + offset) % arr.length] : '';
+
+  const opening  = pick(NPC_DIALOGUE.openings[npc.emotion] || NPC_DIALOGUE.openings.calm);
+  const traitLine = pick(NPC_DIALOGUE.traits[npc.ints[0]] || [], 1);
+  const distKey  = (districtName || 'san marco').toLowerCase();
+  const distLine  = pick(NPC_DIALOGUE.districts[distKey] || NPC_DIALOGUE.districts['san marco'], 2);
+  const protLine  = pick(NPC_DIALOGUE.protocol[npc.protocol] || NPC_DIALOGUE.protocol.comply, 1);
+  const mt = matchScore.total > 0 ? 'mutual' : matchScore.total < 0 ? 'clash' : 'neutral';
+  const matchLine = pick(NPC_DIALOGUE.match[mt], 2);
+
+  // Voice: their opening feeling + either a trait reveal or district observation
+  const voice = opening + ' ' + (traitLine || distLine);
+
+  return { voice, protLine, matchLine, matchType: mt };
+}
+
+// ── Playable character identities ──────────────────────────────────────────────
+// Each type starts with preset trait alignments and stat modifiers.
+// mods apply on top of the player's own intro settings.
+export const PLAYER_TYPES = [
+  {
+    id:'shade',
+    name:'THE SHADE',
+    tagline:'You exist in the gaps.',
+    desc:'Protocols can\'t name what they can\'t see. You move through the city\'s cracks — low legibility, high pressure tolerance.',
+    col:'#534AB7', aura:'#AFA9EC',
+    startTraits:{al:['anonymity','solitude','refusal'],rp:['surveillance','visibility']},
+    mods:{legibility:-22,pressure:-14},
+    ability:'GHOST WALK · Subvert choices remove −6 extra pressure',
+    stats:{legibility:18,social:32,pressure:18,subvert:88},
+  },
+  {
+    id:'weaver',
+    name:'THE WEAVER',
+    tagline:'Every person is a thread.',
+    desc:'You pull people together. Bonding actions reduce twice the pressure. The city\'s social fabric is yours to shape.',
+    col:'#1D9E75', aura:'#5DCAA5',
+    startTraits:{al:['collective','consent','ritual'],rp:['solitude']},
+    mods:{legibility:10,pressure:5,socRBonus:1},
+    ability:'RESONANCE · Bond actions reduce −10 pressure (default −5)',
+    stats:{legibility:65,social:90,pressure:55,subvert:30},
+  },
+  {
+    id:'herald',
+    name:'THE HERALD',
+    tagline:'Visibility is your shield.',
+    desc:'You broadcast openly. High legibility is your advantage. Compliance earns extra legibility — the city rewards your transparency.',
+    col:'#BA7517', aura:'#FAC775',
+    startTraits:{al:['visibility','presence'],rp:['anonymity']},
+    mods:{legibility:28,pressure:-8},
+    ability:'BROADCAST · Comply choices give +8 extra legibility',
+    stats:{legibility:90,social:65,pressure:38,subvert:15},
+  },
+  {
+    id:'glitch',
+    name:'THE GLITCH',
+    tagline:'You are the error.',
+    desc:'You found the cracks and made them wider. Every subversion resonates harder. The system flags you — you flag back.',
+    col:'#A32D2D', aura:'#F09595',
+    startTraits:{al:['disruption','memory'],rp:['surveillance','consent']},
+    mods:{legibility:-14,pressure:18},
+    ability:'CASCADE · Subvert choices remove −5 extra pressure',
+    stats:{legibility:28,social:42,pressure:72,subvert:95},
+  },
+  {
+    id:'watcher',
+    name:'THE WATCHER',
+    tagline:'You see everything. You record it.',
+    desc:'Observation is action. Your detachment accumulates knowledge while others accumulate exposure. Each city event cools your pressure.',
+    col:'#185FA5', aura:'#5DCAA5',
+    startTraits:{al:['surveillance','memory'],rp:['ritual']},
+    mods:{legibility:0,pressure:-20},
+    ability:'ARCHIVE · Each city event removes −4 pressure',
+    stats:{legibility:50,social:35,pressure:14,subvert:50},
+  },
+  {
+    id:'broker',
+    name:'THE BROKER',
+    tagline:'Everything is negotiable.',
+    desc:'You move between positions. No preset alignments — every action gives a small bonus across the board.',
+    col:'#7F77DD', aura:'#7F77DD',
+    startTraits:{al:[],rp:[]},
+    mods:{legibility:5,pressure:0},
+    ability:'ADAPT · All actions give +2 legibility and −2 pressure',
+    stats:{legibility:55,social:60,pressure:50,subvert:55},
+  },
+];
