@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import EncounterModal from '../components/EncounterModal';
 import { TRAITS, SCENES, BRIDGE_SCENES, BLDGS, GND, ARCHS, NAMES, NCOLS, WEATHERS, DAY_EVENTS, MOODS, BOND_DEPTHS } from '../constants';
+import { initSound, playFootstep, playBridgeCross, playBondFormed, playBondClash, playCanalBloom, playZoneEnter, playNPCNear, playDawnChime, playNightFall, setCanalVolume } from '../sound';
 
 const TID = TRAITS.map(t => t.id);
 const T = 40; // isometric tile size
@@ -112,6 +113,7 @@ function face(ctx, pts, f) {
   pts.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));
   ctx.closePath(); ctx.fillStyle=f; ctx.fill();
 }
+// Base isometric box — shared by all building types
 function dTile(ctx, gx, gy, tc, sc, dc, h, CW, CH) {
   const HH=(h||0)*14, p=s2w(gx,gy,CW,CH);
   const top=[{x:p.x,y:p.y-HH},{x:p.x+T,y:p.y+T*.5-HH},{x:p.x,y:p.y+T-HH},{x:p.x-T,y:p.y+T*.5-HH}];
@@ -120,6 +122,185 @@ function dTile(ctx, gx, gy, tc, sc, dc, h, CW, CH) {
   face(ctx,lt,dc||'#0a0a18'); face(ctx,rt,sc||'#0e0e22'); face(ctx,top,tc||'#181830');
   ctx.strokeStyle='rgba(83,74,183,.05)'; ctx.lineWidth=.4;
   ctx.beginPath(); top.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y)); ctx.closePath(); ctx.stroke();
+}
+
+// ── Venice building prototypes ────────────────────────────────────────────────
+// Each draws an isometric box then overlays district-appropriate architectural details.
+
+// Gothic pointed arch window (drawn on a wall face)
+function dGothicArch(ctx, wx, wy, ww, wh, col) {
+  const hw=ww*.5, aw=ww*.38, ah=wh*.55;
+  ctx.beginPath();
+  ctx.moveTo(wx,wy+wh); ctx.lineTo(wx,wy+ah);
+  ctx.quadraticCurveTo(wx,wy,wx+hw,wy);
+  ctx.quadraticCurveTo(wx+ww,wy,wx+ww,wy+ah);
+  ctx.lineTo(wx+ww,wy+wh); ctx.closePath();
+  ctx.fillStyle=col; ctx.fill();
+}
+// Round-headed window (Romanesque)
+function dRoundArch(ctx, wx, wy, ww, wh, col) {
+  const hw=ww*.5;
+  ctx.beginPath();
+  ctx.arc(wx+hw, wy+wh-hw, hw, Math.PI, 0);
+  ctx.lineTo(wx+ww,wy+wh); ctx.lineTo(wx,wy+wh); ctx.closePath();
+  ctx.fillStyle=col; ctx.fill();
+}
+
+// Palazzo (San Marco / Cannaregio) — 3-5 storey facade with Gothic windows
+function dPalazzo(ctx, b, dn, CW, CH) {
+  const HH=b.h*14, p=s2w(b.gx,b.gy,CW,CH);
+  const nt=Math.max(0,Math.min(1,(dn-.6)*4));
+  // Pick palette from bldg colors
+  const top=b.t||'#1e1c18', side=b.s||'#141210', dark=b.d||'#0f0e0c';
+  face(ctx,[{x:p.x-T,y:p.y+T*.5-HH},{x:p.x,y:p.y+T-HH},{x:p.x,y:p.y+T},{x:p.x-T,y:p.y+T*.5}],dark);
+  face(ctx,[{x:p.x+T,y:p.y+T*.5-HH},{x:p.x,y:p.y+T-HH},{x:p.x,y:p.y+T},{x:p.x+T,y:p.y+T*.5}],side);
+  face(ctx,[{x:p.x,y:p.y-HH},{x:p.x+T,y:p.y+T*.5-HH},{x:p.x,y:p.y+T-HH},{x:p.x-T,y:p.y+T*.5-HH}],top);
+  // Gothic windows on right face — 2 per storey
+  const floors=Math.max(2,b.h-1);
+  const floorH=HH/floors;
+  const baseY=p.y+T-2;
+  for(let fl=0;fl<floors;fl++){
+    const fy=baseY-(fl+1)*floorH+floorH*.2;
+    const wh=floorH*.52; const ww=9;
+    // right face windows
+    const rx=p.x+6, rwx=p.x+14;
+    dGothicArch(ctx,rx,fy,ww,wh,'rgba(93,155,255,0.14)');
+    dGothicArch(ctx,rwx,fy,ww,wh,'rgba(93,155,255,0.14)');
+    // left face windows (1 per floor)
+    const lx=p.x-22;
+    dGothicArch(ctx,lx,fy,ww,wh,'rgba(93,155,255,0.10)');
+  }
+  // Cornice line at top
+  ctx.beginPath();
+  ctx.moveTo(p.x-T,p.y+T*.5-HH); ctx.lineTo(p.x,p.y-HH); ctx.lineTo(p.x+T,p.y+T*.5-HH);
+  ctx.strokeStyle='rgba(200,185,140,0.22)'; ctx.lineWidth=1; ctx.stroke();
+  // Watergate arch at base (canal buildings)
+  const isCanal=b.gx>=0&&b.gx<=3;
+  if(isCanal){
+    const gatew=12, gateh=10, gatex=p.x+2, gatey=p.y+T-gateh;
+    dRoundArch(ctx,gatex,gatey,gatew,gateh,'rgba(24,95,165,0.35)');
+  }
+  ctx.strokeStyle='rgba(83,74,183,.04)'; ctx.lineWidth=.3;
+  ctx.beginPath(); [{x:p.x,y:p.y-HH},{x:p.x+T,y:p.y+T*.5-HH},{x:p.x,y:p.y+T-HH},{x:p.x-T,y:p.y+T*.5-HH}].forEach((pt,i)=>i?ctx.lineTo(pt.x,pt.y):ctx.moveTo(pt.x,pt.y)); ctx.closePath(); ctx.stroke();
+}
+
+// Campanile / bell tower (Arsenale, tall slender)
+function dCampanile(ctx, b, dn, CW, CH) {
+  const HH=b.h*14, p=s2w(b.gx,b.gy,CW,CH);
+  const TW=T*.45; // narrower than standard tile
+  const top=b.t||'#161c1e', side=b.s||'#0f1315', dark=b.d||'#0b0f10';
+  // Narrowed shaft
+  const shL=[{x:p.x-TW,y:p.y+T*.5-HH},{x:p.x,y:p.y+T-HH},{x:p.x,y:p.y+T},{x:p.x-TW,y:p.y+T*.5}];
+  const shR=[{x:p.x+TW,y:p.y+T*.5-HH},{x:p.x,y:p.y+T-HH},{x:p.x,y:p.y+T},{x:p.x+TW,y:p.y+T*.5}];
+  const shT=[{x:p.x,y:p.y-HH},{x:p.x+TW,y:p.y+T*.5-HH},{x:p.x,y:p.y+T-HH},{x:p.x-TW,y:p.y+T*.5-HH}];
+  face(ctx,shL,dark); face(ctx,shR,side); face(ctx,shT,top);
+  // Belfry cap — pyramidal top
+  const capH=22, capY=p.y-HH;
+  ctx.beginPath();
+  ctx.moveTo(p.x,capY-capH);
+  ctx.lineTo(p.x+TW,capY+T*.5*.45); ctx.lineTo(p.x,capY+T*.45); ctx.lineTo(p.x-TW,capY+T*.5*.45);
+  ctx.closePath(); ctx.fillStyle='rgba(186,117,23,0.45)'; ctx.fill();
+  // Arched openings in belfry
+  dRoundArch(ctx,p.x-4,capY,8,12,'rgba(0,0,0,0.55)');
+  // Slim windows up the shaft
+  for(let fl=1;fl<b.h-1;fl++){
+    const wy=p.y+T-fl*(HH/b.h)-6;
+    ctx.beginPath(); ctx.rect(p.x+2,wy,4,8); ctx.fillStyle='rgba(93,155,255,0.12)'; ctx.fill();
+  }
+}
+
+// Fondamenta warehouse (Dorsoduro / Cannaregio) — low wide with round arches
+function dFondamenta(ctx, b, dn, CW, CH) {
+  const HH=b.h*14, p=s2w(b.gx,b.gy,CW,CH);
+  const top=b.t||'#0e1418', side=b.s||'#09101a', dark=b.d||'#060c10';
+  face(ctx,[{x:p.x-T,y:p.y+T*.5-HH},{x:p.x,y:p.y+T-HH},{x:p.x,y:p.y+T},{x:p.x-T,y:p.y+T*.5}],dark);
+  face(ctx,[{x:p.x+T,y:p.y+T*.5-HH},{x:p.x,y:p.y+T-HH},{x:p.x,y:p.y+T},{x:p.x+T,y:p.y+T*.5}],side);
+  face(ctx,[{x:p.x,y:p.y-HH},{x:p.x+T,y:p.y+T*.5-HH},{x:p.x,y:p.y+T-HH},{x:p.x-T,y:p.y+T*.5-HH}],top);
+  // Wide round-arch openings at ground level
+  const archW=16, archH=14;
+  dRoundArch(ctx,p.x-4,p.y+T-archH,archW,archH,'rgba(24,95,165,0.28)');
+  dRoundArch(ctx,p.x+8,p.y+T*.5+4-archH+4,archW*.7,archH*.7,'rgba(24,95,165,0.18)');
+  // Horizontal belt course
+  const beltY=p.y+T-HH+HH*.4;
+  ctx.beginPath();
+  ctx.moveTo(p.x-T,beltY-HH*.0); ctx.lineTo(p.x,beltY+T*.25-HH*.0); ctx.lineTo(p.x+T,beltY-HH*.0);
+  ctx.strokeStyle='rgba(200,185,140,0.15)'; ctx.lineWidth=.8; ctx.stroke();
+}
+
+// Arsenale industrial block — angular, riveted, data ports
+function dArsenale(ctx, b, dn, CW, CH) {
+  const HH=b.h*14, p=s2w(b.gx,b.gy,CW,CH);
+  const top=b.t||'#141a1c', side=b.s||'#0e1214', dark=b.d||'#0a0e10';
+  face(ctx,[{x:p.x-T,y:p.y+T*.5-HH},{x:p.x,y:p.y+T-HH},{x:p.x,y:p.y+T},{x:p.x-T,y:p.y+T*.5}],dark);
+  face(ctx,[{x:p.x+T,y:p.y+T*.5-HH},{x:p.x,y:p.y+T-HH},{x:p.x,y:p.y+T},{x:p.x+T,y:p.y+T*.5}],side);
+  face(ctx,[{x:p.x,y:p.y-HH},{x:p.x+T,y:p.y+T*.5-HH},{x:p.x,y:p.y+T-HH},{x:p.x-T,y:p.y+T*.5-HH}],top);
+  // Horizontal rivet lines
+  const floors=b.h;
+  for(let fl=1;fl<floors;fl++){
+    const ly=p.y+T-fl*(HH/floors);
+    ctx.beginPath(); ctx.moveTo(p.x+T,ly-T*.5*(fl/floors)); ctx.lineTo(p.x,ly); ctx.lineTo(p.x-T,ly-T*.5*(fl/floors));
+    ctx.strokeStyle='rgba(186,117,23,0.18)'; ctx.lineWidth=.6; ctx.stroke();
+  }
+  // Rectangular industrial windows
+  for(let fl=1;fl<floors;fl++){
+    const wy=p.y+T-fl*(HH/floors)-8;
+    ctx.beginPath(); ctx.rect(p.x+4,wy,8,5); ctx.fillStyle='rgba(186,117,23,0.16)'; ctx.fill();
+    ctx.beginPath(); ctx.rect(p.x-12,wy+2,8,5); ctx.fillStyle='rgba(186,117,23,0.10)'; ctx.fill();
+  }
+  // Glow data-port at top
+  ctx.beginPath(); ctx.arc(p.x+2,p.y-HH+2,3,0,Math.PI*2);
+  ctx.fillStyle='rgba(186,117,23,0.55)'; ctx.fill();
+}
+
+// Route building draw to the right Venice prototype based on district
+function dBuilding(ctx, b, dn, CW, CH) {
+  const isArsenale=b.gx>=3;
+  const isCannaregio=b.gx<=-3||b.gy<=-2;
+  const isDorsoduro=b.gy>=5;
+  const isTall=b.h>=5;
+  if(isArsenale&&isTall)        dCampanile(ctx,b,dn,CW,CH);
+  else if(isArsenale)           dArsenale(ctx,b,dn,CW,CH);
+  else if(isDorsoduro||isCannaregio) dFondamenta(ctx,b,dn,CW,CH);
+  else                          dPalazzo(ctx,b,dn,CW,CH);
+}
+
+// Bridge tile — stone arch spanning the canal at given gy
+function dBridge(ctx, bridgeGy, dn, ts, CW, CH) {
+  const nt=Math.max(0,Math.min(1,(dn-.6)*4));
+  // Stone color — warm limestone in dark
+  const sc=`rgba(${Math.round(42*(1-nt*.4))},${Math.round(38*(1-nt*.4))},${Math.round(30*(1-nt*.4))},1)`;
+  const sd=`rgba(${Math.round(28*(1-nt*.4))},${Math.round(25*(1-nt*.4))},${Math.round(20*(1-nt*.4))},1)`;
+  // Draw bridge deck spanning gx=0.5 to gx=2.5
+  for(let bx=0.5;bx<=2.5;bx+=0.5){
+    const p=s2w(bx,bridgeGy,CW,CH);
+    const hh=6; // bridge is slightly raised
+    face(ctx,[{x:p.x-T*.5,y:p.y+T*.5-hh},{x:p.x,y:p.y+T-hh},{x:p.x,y:p.y+T},{x:p.x-T*.5,y:p.y+T*.5}],sd);
+    face(ctx,[{x:p.x+T*.5,y:p.y+T*.5-hh},{x:p.x,y:p.y+T-hh},{x:p.x,y:p.y+T},{x:p.x+T*.5,y:p.y+T*.5}],sc);
+    face(ctx,[{x:p.x,y:p.y-hh},{x:p.x+T*.5,y:p.y+T*.5-hh},{x:p.x,y:p.y+T-hh},{x:p.x-T*.5,y:p.y+T*.5-hh}],`rgba(58,52,38,0.9)`);
+  }
+  // Central arch under the bridge — visible as a dark curve beneath the deck
+  const midP=s2w(1.5,bridgeGy,CW,CH);
+  ctx.beginPath();
+  ctx.ellipse(midP.x, midP.y+T*.85, T*.9, T*.28, 0, Math.PI, 0);
+  ctx.strokeStyle='rgba(24,95,165,0.55)'; ctx.lineWidth=1.8; ctx.stroke();
+  ctx.fillStyle='rgba(12,30,55,0.7)'; ctx.fill();
+  // Stone balustrade posts
+  for(let bx=0.5;bx<=2.5;bx+=0.5){
+    const pp=s2w(bx,bridgeGy,CW,CH);
+    ctx.beginPath(); ctx.rect(pp.x-1,pp.y+T*.3,2,8);
+    ctx.fillStyle='rgba(90,82,64,0.7)'; ctx.fill();
+  }
+  // Lamp posts at bridge entrance
+  [-0.2,3.2].forEach(bx=>{
+    const lp=s2w(bx,bridgeGy,CW,CH);
+    ctx.beginPath(); ctx.moveTo(lp.x,lp.y+T*.5); ctx.lineTo(lp.x,lp.y+T*.5-28);
+    ctx.strokeStyle='rgba(90,82,64,0.5)'; ctx.lineWidth=1.2; ctx.stroke();
+    // Lamp glow
+    const gl=ctx.createRadialGradient(lp.x,lp.y+T*.5-28,0,lp.x,lp.y+T*.5-28,12);
+    gl.addColorStop(0,'rgba(250,199,117,0.55)'); gl.addColorStop(1,'rgba(250,199,117,0)');
+    ctx.beginPath(); ctx.arc(lp.x,lp.y+T*.5-28,12,0,Math.PI*2);
+    ctx.fillStyle=gl; ctx.fill();
+  });
 }
 function dGnd(ctx, gx, gy, dn, CW, CH) {
   const p=s2w(gx,gy,CW,CH);
@@ -446,6 +627,7 @@ export default function GameScreen({ visible, config, onEnd }) {
         GS.bonds.push({id:npc.id,name:npc.name,col:npc.col,type,depth:0,emotion:npc.emotion});
         npc.bonded=true; npc.bondWith='player'; npc.bondType=type; npc.bondDepth=0;
         setBonds([...GS.bonds]);
+        if(type==='mutual') playBondFormed(); else playBondClash();
       }
     }
 
@@ -509,6 +691,7 @@ export default function GameScreen({ visible, config, onEnd }) {
       addSparks(pp.x,pp.y+T*.5-sc.h*14,sc.col);
       pushFeed('Entered: '+sc.label);
       nearCool=200;
+      playZoneEnter();
     }
 
     function openBridgeEncounter(){
@@ -524,6 +707,7 @@ export default function GameScreen({ visible, config, onEnd }) {
       setEncounter({type:'bridge',scene:positioned});
       pushFeed('Crossing the Grand Canal…');
       nearCool=200;
+      playBridgeCross();
     }
 
     function clickNPC(npc){
@@ -559,6 +743,10 @@ export default function GameScreen({ visible, config, onEnd }) {
     }
     window.addEventListener('keydown',onKD);
     window.addEventListener('keyup',onKU);
+    // Unlock Web Audio on first interaction (browser autoplay policy)
+    const unlockAudio = () => { initSound(); };
+    window.addEventListener('keydown', unlockAudio, { once: true });
+    canvas.addEventListener('click', unlockAudio, { once: true });
 
     function onCanvasClick(e){
       if(encOpenRef.current) return;
@@ -636,26 +824,38 @@ export default function GameScreen({ visible, config, onEnd }) {
       if(al>0){ctx.fillStyle=`rgba(80,70,160,${al})`;ctx.fillRect(0,0,CW,CH);}
     }
 
-    let lastT=0, rafId;
+    let lastT=0, rafId, lastDn=-1, footTimer=0;
     function loop(ts){
       rafId=requestAnimationFrame(loop);
       const dt=Math.min(ts-lastT,50); lastT=ts; frameCount++;
       const dayRate=GS.simSpd/4*.0004;
       dayMinutes=(dayMinutes+dt*dayRate*20)%1440;
       const dn=dayMinutes/1440;
+      // Dawn / nightfall sound cues
+      if(lastDn>=0){
+        if(lastDn<0.25&&dn>=0.25) playDawnChime();
+        if(lastDn<0.875&&dn>=0.875) playNightFall();
+      }
+      lastDn=dn;
       DAY_EVENTS.forEach(ev=>{if(!firedEvs.has(ev.id)&&dayMinutes>=ev.t&&dayMinutes<ev.t+5){firedEvs.add(ev.id);pushFeed(ev.msg);showAmbient(ev.msg);evCount++;if(_pt.id==='watcher')GS.prs=Math.max(0,GS.prs-4);}});
       if(dayMinutes<5&&firedEvs.size>0) firedEvs.clear();
       wTimer+=dt;if(wTimer>wNext){wTimer=0;wNext=8000+Math.random()*15000;const wl=WEATHERS.filter(w=>w!==weather);weather=wl[Math.floor(Math.random()*wl.length)];pushFeed('Weather: '+weather.toUpperCase());if(weather==='rain')initRain();}
+      // Canal ambience volume — louder when near canal
+      if(frameCount%30===0) setCanalVolume(1-Math.min(1,Math.abs(PL.gx-1.5)/5));
       if(!encOpenRef.current){
         const spd=GS.simSpd*.007;
+        const wasMoving=K.w||K.s||K.a||K.d||PL.mv;
         if(K.w){PL.gx-=spd;PL.gy-=spd;}if(K.s){PL.gx+=spd;PL.gy+=spd;}
         if(K.a){PL.gx-=spd;PL.gy+=spd;}if(K.d){PL.gx+=spd;PL.gy-=spd;}
         if(PL.mv){const dx=PL.tx-PL.gx,dy=PL.ty-PL.gy,d2=Math.hypot(dx,dy);if(d2<.15){PL.gx=PL.tx;PL.gy=PL.ty;PL.mv=false;}else{PL.gx+=dx*PL.spd*(GS.simSpd/5);PL.gy+=dy*PL.spd*(GS.simSpd/5);}}
         PL.gx=Math.max(-8,Math.min(9,PL.gx));PL.gy=Math.max(-6,Math.min(9,PL.gy));
+        // Footstep sounds while moving
+        if(wasMoving){ footTimer+=dt; if(footTimer>320){footTimer=0; const onWater=(PL.gx>=0.5&&PL.gx<=2.5); playFootstep(onWater);} }
+        else footTimer=0;
         if(nearCool>0){nearCool--;}else{
           for(const sc of SCENES){if(GS.visited.has(sc.id)||GS.gameOver)continue;if(Math.hypot(PL.gx-sc.gx,PL.gy-sc.gy)<1.6&&lastNear!==sc.id){lastNear=sc.id;openZone(sc);break;}}
           const sr=GS.socR===1?2:GS.socR===3?4:3;
-          for(const n of npcs){if(!n.bonded&&n.mood==='open'&&Math.hypot(PL.gx-n.gx,PL.gy-n.gy)<sr*.65&&Math.random()>.988){clickNPC(n);break;}}
+          for(const n of npcs){if(!n.bonded&&n.mood==='open'&&Math.hypot(PL.gx-n.gx,PL.gy-n.gy)<sr*.65&&Math.random()>.988){playNPCNear();clickNPC(n);break;}}
         }
         // ── Canal Vibe Match bloom ──────────────────────────────────────────
         if(canalBloomCool<=0){
@@ -672,6 +872,7 @@ export default function GameScreen({ visible, config, onEnd }) {
               addSparks(mp.x,mp.y+T*.5,cMood.col);
               addFloat(mp.x,mp.y+T*.5-24,'CANAL RESONANCE',cMood.col);
               pushFeed('Canal: '+pEmo+' resonance with '+cMatch.name);
+              playCanalBloom();
             }
           }
         }
@@ -701,8 +902,12 @@ export default function GameScreen({ visible, config, onEnd }) {
       dDistrictLabels(ctx,ts,CW,CH);
       dDorsoduoGlow(ctx,dn,ts,CW,CH);
       if(heatmapRef.current) dVibeHeatmap(ctx,npcs,ts,CW,CH);
+      // Bridges over the Grand Canal — drawn in sort order by gy
+      [-2,2,6].forEach(bgy=>{
+        if((-2+2+bgy)/3 < 11) dBridge(ctx,bgy,dn,ts,CW,CH);
+      });
       [...BLDGS].sort((a,b)=>(a.gx+a.gy)-(b.gx+b.gy)).forEach(b=>{
-        dTile(ctx,b.gx,b.gy,b.t,b.s,b.d,b.h,CW,CH);
+        dBuilding(ctx,b,dn,CW,CH);
         if((dn>.6||dn<.1)&&Math.random()>.994){const pp=s2w(b.gx,b.gy,CW,CH);ctx.fillStyle=`rgba(255,220,100,${.12+Math.random()*.18})`;ctx.fillRect(pp.x+(Math.random()-.5)*T*1.5,pp.y+T*.5-b.h*14-Math.random()*b.h*14,3,5);}
       });
       [...SCENES].sort((a,b)=>(a.gx+a.gy)-(b.gx+b.gy)).forEach(sc=>dScene(ctx,sc,ts,dn,GS.visited,GS.prt,CW,CH));
