@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Protocol City · Map + Isometric</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:opsz,wght@300;400;500&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{background:#02020a;overflow:hidden;height:100vh;width:100vw;font-family:'DM Sans',sans-serif;}
+#app{width:100vw;height:100vh;position:relative;overflow:hidden;}
+
+.scr{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity .55s ease,transform .55s ease;transform:translateY(14px);display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.scr.on{opacity:1;pointer-events:all;transform:none;}
+
+/* ─── INTRO ─────────────────────────── */
+#scr-intro{background:#02020a;padding:20px;overflow-y:auto;gap:0;}
+.gl{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.3em;color:rgba(83,74,183,.5);margin-bottom:20px;animation:flk 3s infinite;}
+@keyframes flk{0%,100%{opacity:.5;}50%{opacity:1;}94%{opacity:1;}96%{opacity:.3;}98%{opacity:1;}}
+.ttl{font-family:'Space Mono',monospace;font-size:clamp(22px,4vw,44px);font-weight:700;color:#AFA9EC;letter-spacing:-.02em;margin-bottom:4px;text-align:center;}
+.sub{font-size:11px;color:rgba(175,169,236,.3);margin-bottom:16px;letter-spacing:.07em;}
+.aura-sec{width:100%;max-width:500px;margin-bottom:14px;}
+.aura-lbl{font-family:'Space Mono',monospace;font-size:7.5px;letter-spacing:.18em;color:rgba(175,169,236,.4);margin-bottom:9px;text-align:center;}
+.aura-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.aura-card{border-radius:10px;border:.5px solid;padding:9px 9px;cursor:pointer;transition:all .2s;user-select:none;}
+.aura-card:hover{transform:translateY(-1px);}
+.aura-card.sel{box-shadow:0 0 0 1.5px currentColor;}
+.ac-nm{font-family:'Space Mono',monospace;font-size:8px;font-weight:700;display:block;margin-bottom:2px;}
+.ac-ds{font-size:9px;line-height:1.4;opacity:.65;}
+.ac-tg{font-family:'Space Mono',monospace;font-size:6px;padding:2px 5px;border-radius:20px;margin-top:4px;display:inline-block;opacity:.75;}
+.tsec{width:100%;max-width:490px;margin-bottom:12px;}
+.tsl{font-family:'Space Mono',monospace;font-size:7px;letter-spacing:.14em;color:rgba(175,169,236,.35);margin-bottom:7px;text-align:center;}
+.tg{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;}
+.tp{font-family:'Space Mono',monospace;font-size:7px;padding:3px 10px;border-radius:20px;border:.5px solid rgba(83,74,183,.28);color:rgba(175,169,236,.4);cursor:pointer;transition:all .18s;user-select:none;}
+.tp.a{background:rgba(83,74,183,.18);border-color:#7F77DD;color:#CECBF6;}
+.tp.r{background:rgba(216,90,48,.1);border-color:rgba(216,90,48,.45);color:#F0997B;}
+.slw{width:100%;max-width:450px;background:rgba(83,74,183,.05);border:.5px solid rgba(83,74,183,.18);border-radius:12px;padding:12px 16px;margin-bottom:16px;}
+.slr{display:flex;align-items:center;gap:9px;margin-bottom:8px;}
+.slr:last-child{margin-bottom:0;}
+.sll{font-family:'Space Mono',monospace;font-size:7px;letter-spacing:.1em;color:rgba(175,169,236,.4);width:86px;flex-shrink:0;text-transform:uppercase;}
+.slt{flex:1;height:3px;background:rgba(83,74,183,.18);border-radius:2px;cursor:pointer;position:relative;}
+.slf{position:absolute;left:0;top:0;height:100%;border-radius:2px;}
+.slh{position:absolute;top:50%;width:13px;height:13px;border-radius:50%;transform:translate(-50%,-50%);cursor:grab;border:1.5px solid rgba(255,255,255,.22);}
+.slv{font-family:'Space Mono',monospace;font-size:8px;font-weight:700;width:30px;text-align:right;}
+.go-btn{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;padding:11px 32px;border-radius:11px;border:.5px solid rgba(83,74,183,.55);background:rgba(83,74,183,.1);color:#AFA9EC;cursor:pointer;transition:all .2s;}
+.go-btn:hover{background:rgba(83,74,183,.22);border-color:#7F77DD;color:#CECBF6;transform:translateY(-1px);}
+
+/* ─── MAP SCREEN ─────────────────────── */
+#scr-map{background:#02020a;padding:0;justify-content:flex-start;align-items:stretch;}
+#map-header{padding:12px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:.5px solid rgba(83,74,183,.2);flex-shrink:0;}
+.map-title{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.2em;color:rgba(175,169,236,.6);}
+.map-sub{font-family:'Space Mono',monospace;font-size:7px;color:rgba(175,169,236,.3);}
+.map-enter-btn{font-family:'Space Mono',monospace;font-size:8px;padding:7px 16px;border-radius:8px;border:.5px solid rgba(83,74,183,.45);background:rgba(83,74,183,.1);color:#AFA9EC;cursor:pointer;transition:all .18s;letter-spacing:.1em;text-transform:uppercase;}
+.map-enter-btn:hover{background:rgba(83,74,183,.22);border-color:#7F77DD;}
+.map-enter-btn:disabled{opacity:.3;pointer-events:none;}
+#map-body{flex:1;display:grid;grid-template-columns:1fr 280px;min-height:0;}
+#map-canvas-wrap{position:relative;overflow:hidden;}
+canvas#mapC{display:block;width:100%;height:100%;}
+#map-sidebar{border-left:.5px solid rgba(83,74,183,.18);background:#03030e;overflow-y:auto;padding:14px;}
+.map-hint{font-family:'Space Mono',monospace;font-size:7px;letter-spacing:.12em;color:rgba(175,169,236,.3);margin-bottom:12px;}
+.district-card{border-radius:8px;border:.5px solid rgba(83,74,183,.2);padding:10px 11px;margin-bottom:8px;cursor:pointer;transition:all .18s;background:rgba(255,255,255,.02);}
+.district-card:hover{border-color:#7F77DD;background:rgba(83,74,183,.07);}
+.district-card.selected{border-color:#5DCAA5;background:rgba(93,202,165,.05);}
+.dc-dot-row{display:flex;align-items:center;gap:7px;margin-bottom:5px;}
+.dc-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.dc-name{font-family:'Space Mono',monospace;font-size:9px;font-weight:700;color:#AFA9EC;}
+.dc-vibe{font-family:'Space Mono',monospace;font-size:6.5px;padding:2px 6px;border-radius:20px;}
+.dc-desc{font-size:10px;color:rgba(175,169,236,.5);line-height:1.5;margin-bottom:5px;}
+.dc-tags{display:flex;gap:4px;flex-wrap:wrap;}
+.dc-tag{font-family:'Space Mono',monospace;font-size:6px;padding:2px 6px;border-radius:10px;background:rgba(83,74,183,.12);color:rgba(175,169,236,.5);}
+#map-footer{padding:10px 18px;border-top:.5px solid rgba(83,74,183,.18);display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.mf-sel{font-family:'Space Mono',monospace;font-size:8px;color:rgba(175,169,236,.45);}
+.mf-sel b{color:#5DCAA5;}
+.mf-legend{display:flex;gap:10px;margin-left:auto;}
+.mfl-item{display:flex;align-items:center;gap:4px;font-family:'Space Mono',monospace;font-size:6.5px;color:rgba(175,169,236,.35);}
+.mfl-dot{width:7px;height:7px;border-radius:50%;}
+
+/* ─── GAME ───────────────────────────── */
+#scr-game{justify-content:flex-start;align-items:stretch;background:#02020a;}
+#world{flex:1;position:relative;overflow:hidden;min-height:0;}
+canvas#C{display:block;width:100%;height:100%;}
+#htop{position:absolute;top:7px;left:7px;right:7px;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none;z-index:20;gap:4px;flex-wrap:wrap;}
+.hp{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.09em;color:rgba(200,190,255,.9);background:rgba(2,2,10,.9);padding:3px 9px;border-radius:20px;border:.5px solid rgba(83,74,183,.35);white-space:nowrap;}
+.hp b{color:#5DCAA5;}
+.hp.wr b{color:#F09595;}
+.hp.ev b{color:#FAC775;}
+.hp.res b{color:#FF88CC;}
+#paura-hud{position:absolute;top:34px;left:7px;pointer-events:none;z-index:20;display:flex;align-items:center;gap:6px;}
+.pa-dot{width:9px;height:9px;border-radius:50%;}
+.pa-nm{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;}
+.pa-bar{width:60px;height:3px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;}
+.pa-fill{height:100%;border-radius:2px;transition:width .4s;}
+#tbar{position:absolute;top:54px;left:7px;right:7px;height:3px;background:rgba(255,255,255,.05);border-radius:2px;pointer-events:none;z-index:20;}
+#tfill{height:100%;border-radius:2px;transition:width .5s;}
+#lstats{position:absolute;top:64px;left:7px;pointer-events:none;z-index:20;}
+.sb{display:flex;align-items:center;gap:5px;margin-bottom:3px;}
+.sbl{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.06em;color:rgba(175,169,236,.4);width:52px;}
+.sbt{width:68px;height:3px;background:rgba(255,255,255,.06);border-radius:2px;}
+.sbf{height:100%;border-radius:2px;transition:width .5s;}
+#sgraph{position:absolute;top:7px;right:7px;width:180px;pointer-events:none;z-index:20;}
+.sgt{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.12em;color:rgba(175,169,236,.38);margin-bottom:5px;}
+.brow{display:flex;align-items:center;gap:5px;margin-bottom:3px;background:rgba(2,2,10,.85);border:.5px solid rgba(83,74,183,.18);border-radius:7px;padding:4px 8px;animation:brin .3s ease;}
+@keyframes brin{from{opacity:0;transform:translateX(6px);}to{opacity:1;transform:none;}}
+.bd{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.bn{font-family:'Space Mono',monospace;font-size:9px;color:rgba(175,169,236,.6);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bt{font-family:'Space Mono',monospace;font-size:8px;padding:1px 5px;border-radius:8px;}
+.bt.m{background:rgba(93,202,165,.12);color:#5DCAA5;}
+.bt.c{background:rgba(216,90,48,.12);color:#D85A30;}
+#abar{position:absolute;bottom:7px;left:7px;right:7px;pointer-events:none;z-index:20;}
+.abi{background:rgba(2,2,10,.9);border:.5px solid rgba(83,74,183,.25);border-radius:10px;padding:7px 12px;display:flex;align-items:center;gap:10px;}
+.anm{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;min-width:128px;transition:color .5s;}
+.atr{flex:1;display:flex;gap:6px;}
+.at2{flex:1;display:flex;align-items:center;gap:4px;}
+.atl{font-family:'Space Mono',monospace;font-size:8.5px;color:rgba(175,169,236,.35);width:44px;}
+.atb{flex:1;height:3px;background:rgba(255,255,255,.05);border-radius:2px;}
+.atf{height:100%;border-radius:2px;transition:width .5s;}
+.ats{font-family:'Space Mono',monospace;font-size:9px;color:rgba(175,169,236,.32);width:14px;text-align:right;}
+#kh{position:absolute;bottom:54px;right:7px;z-index:20;display:grid;grid-template-columns:repeat(3,1fr);gap:3px;width:66px;pointer-events:none;}
+.k{background:rgba(2,2,10,.85);border:.5px solid rgba(83,74,183,.22);border-radius:4px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:10px;color:rgba(175,169,236,.38);transition:all .1s;}
+.k.on{background:rgba(83,74,183,.28);color:#AFA9EC;border-color:#7F77DD;}
+#efeed{position:absolute;bottom:56px;left:7px;z-index:20;pointer-events:none;width:215px;}
+.ei{font-family:'Space Mono',monospace;font-size:10px;color:rgba(175,169,236,.65);background:rgba(2,2,10,.88);border:.5px solid rgba(83,74,183,.2);border-radius:5px;padding:3px 8px;margin-bottom:3px;animation:eiin .25s ease;}
+@keyframes eiin{from{opacity:0;transform:translateX(-5px);}to{opacity:1;transform:none;}}
+#map-btn{position:absolute;bottom:56px;right:7px;z-index:20;pointer-events:all;}
+.mbtn{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.09em;text-transform:uppercase;padding:6px 12px;border-radius:9px;border:.5px solid rgba(83,74,183,.4);background:rgba(83,74,183,.1);color:rgba(175,169,236,.7);cursor:pointer;transition:all .18s;}
+.mbtn:hover{background:rgba(83,74,183,.2);color:#AFA9EC;}
+
+/* ─── ENCOUNTER ─────────────────────── */
+#enc{position:absolute;inset:0;background:rgba(2,2,10,.8);z-index:50;display:none;align-items:flex-end;justify-content:center;}
+#enc.on{display:flex;}
+#ecard{width:min(96%,460px);background:#0b0a1c;border:.5px solid rgba(83,74,183,.45);border-top-left-radius:16px;border-top-right-radius:16px;padding:16px 16px 20px;animation:sup .35s cubic-bezier(.34,1.56,.64,1);max-height:88vh;overflow-y:auto;}
+@keyframes sup{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:none;}}
+.eey{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.18em;color:rgba(175,169,236,.35);margin-bottom:6px;}
+.eh2{display:flex;align-items:center;gap:9px;margin-bottom:11px;}
+.edot{width:10px;height:10px;border-radius:50%;}
+.et2{font-family:'Space Mono',monospace;font-size:14px;letter-spacing:.09em;color:#AFA9EC;}
+.emem{font-family:'Space Mono',monospace;font-size:11px;color:rgba(175,169,236,.4);border-left:2px solid rgba(83,74,183,.32);padding-left:8px;margin-bottom:10px;line-height:1.65;display:none;}
+.ebody{font-size:14px;line-height:1.8;color:#d0d0e0;font-weight:300;margin-bottom:12px;}
+.ebody em{color:#AFA9EC;font-style:normal;font-weight:500;}
+.ebody b{color:#5DCAA5;font-weight:500;}
+.esec{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.15em;color:rgba(175,169,236,.32);margin-bottom:8px;margin-top:12px;}
+.cg{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;}
+.cc{background:rgba(255,255,255,.025);border:.5px solid rgba(83,74,183,.22);border-radius:9px;padding:8px 10px;cursor:pointer;transition:all .15s;}
+.cc:hover{border-color:#7F77DD;background:rgba(83,74,183,.09);}
+.cc:active{transform:scale(.97);}
+.cc.ch{border-color:#5DCAA5;background:rgba(93,202,165,.06);pointer-events:none;}
+.cc.lk{pointer-events:none;opacity:.2;}
+.cb2{font-family:'Space Mono',monospace;font-size:9px;display:block;margin-bottom:3px;color:rgba(175,169,236,.42);}
+.ct2{font-size:13px;color:#d0d0e0;line-height:1.3;}
+.cco{font-family:'Space Mono',monospace;font-size:9px;color:rgba(175,169,236,.25);margin-top:3px;}
+.ag{display:grid;grid-template-columns:1fr;gap:5px;margin-bottom:10px;}
+.ac2{background:rgba(255,255,255,.025);border:.5px solid;border-radius:9px;padding:8px 11px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:9px;}
+.ac2:hover{background:rgba(83,74,183,.08);}
+.ac2:active{transform:scale(.98);}
+.aic{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:10px;font-weight:700;flex-shrink:0;}
+.atn{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;display:block;margin-bottom:2px;}
+.adc{font-size:12px;color:rgba(175,169,236,.5);line-height:1.4;}
+.atg{font-family:'Space Mono',monospace;font-size:8.5px;padding:2px 6px;border-radius:8px;margin-top:3px;display:inline-block;}
+.rg{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:10px;}
+.rb{background:rgba(255,255,255,.025);border:.5px solid rgba(83,74,183,.22);border-radius:9px;padding:8px 10px;cursor:pointer;transition:all .15s;text-align:left;}
+.rb:hover{border-color:#7F77DD;background:rgba(83,74,183,.08);}
+.rn{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:#AFA9EC;display:block;margin-bottom:3px;}
+.rd{font-size:12px;color:rgba(175,169,236,.42);line-height:1.4;}
+.rc{font-family:'Space Mono',monospace;font-size:9px;color:rgba(175,169,236,.25);margin-top:3px;}
+.eres{border-radius:8px;padding:8px 11px;font-family:'Space Mono',monospace;font-size:12px;line-height:1.6;border:.5px solid;display:none;margin-bottom:10px;}
+.eres.on{display:block;}
+.eres.g{background:rgba(15,110,86,.1);border-color:rgba(93,202,165,.25);color:#9FE1CB;}
+.eres.b{background:rgba(161,45,45,.07);border-color:rgba(240,149,149,.18);color:#F5C4B3;}
+.eres.w{background:rgba(83,74,183,.06);border-color:rgba(175,169,236,.18);color:#CECBF6;}
+.eres.r{background:rgba(255,136,204,.07);border-color:rgba(255,136,204,.25);color:#FF88CC;}
+.efoot{display:flex;justify-content:space-between;align-items:center;margin-top:8px;}
+.ecl{font-family:'Space Mono',monospace;font-size:10px;color:rgba(175,169,236,.3);cursor:pointer;text-transform:uppercase;transition:color .15s;}
+.ecl:hover{color:#AFA9EC;}
+.eprog{display:flex;gap:4px;}
+.epd{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.07);}
+.epd.v{background:#534AB7;}
+.epd.a{background:#5DCAA5;box-shadow:0 0 5px rgba(93,202,165,.4);}
+
+/* ─── RESONANCE FLASH ───────────────── */
+#res-flash{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:30;display:none;pointer-events:none;}
+.rf-in{background:rgba(10,9,26,.96);border:.5px solid rgba(255,136,204,.4);border-radius:14px;padding:10px 18px;text-align:center;animation:respop .4s cubic-bezier(.34,1.56,.64,1);}
+@keyframes respop{from{opacity:0;transform:scale(.8);}to{opacity:1;transform:scale(1);}}
+.rf-lbl{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.18em;color:rgba(255,136,204,.6);margin-bottom:3px;}
+.rf-nm{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;color:#FF88CC;}
+.rf-sub{font-size:10px;color:rgba(175,169,236,.5);margin-top:3px;}
+
+/* ─── VEIL ───────────────────────────── */
+#veil{position:absolute;inset:0;background:#02020a;z-index:100;pointer-events:none;opacity:0;transition:opacity .45s ease;}
+#veil.on{opacity:1;}
+#vttl{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:101;pointer-events:none;opacity:0;transition:opacity .4s;}
+#vttl.on{opacity:1;}
+.ve{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.28em;color:rgba(83,74,183,.5);margin-bottom:8px;}
+.vm{font-family:'Space Mono',monospace;font-size:clamp(18px,3.5vw,32px);font-weight:700;color:#AFA9EC;text-align:center;}
+.vs2{font-size:11px;color:rgba(175,169,236,.28);margin-top:5px;letter-spacing:.07em;}
+
+/* ─── END ────────────────────────────── */
+#scr-end{background:#02020a;padding:22px;gap:0;overflow-y:auto;}
+.end-ey{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.18em;color:rgba(175,169,236,.2);margin-bottom:9px;}
+.end-a{font-family:'Space Mono',monospace;font-size:clamp(20px,3.8vw,36px);font-weight:700;margin-bottom:5px;text-align:center;}
+.end-s{font-size:14px;color:rgba(175,169,236,.4);margin-bottom:16px;max-width:380px;text-align:center;line-height:1.75;}
+.end-g{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;margin-bottom:14px;}
+.est{background:rgba(255,255,255,.03);border:.5px solid rgba(83,74,183,.15);border-radius:9px;padding:9px 12px;text-align:center;min-width:68px;}
+.esn{font-family:'Space Mono',monospace;font-size:18px;font-weight:700;display:block;}
+.esl{font-size:10px;color:rgba(175,169,236,.3);}
+.ebw{max-width:410px;width:100%;margin-bottom:14px;}
+.ebt{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.14em;color:rgba(175,169,236,.25);margin-bottom:7px;}
+.ebr{display:flex;align-items:center;gap:7px;padding:6px 9px;background:rgba(255,255,255,.02);border:.5px solid rgba(83,74,183,.12);border-radius:7px;margin-bottom:4px;}
+.ebd{width:7px;height:7px;border-radius:50%;}
+.ebn{font-family:'Space Mono',monospace;font-size:11px;flex:1;}
+.ebtp{font-family:'Space Mono',monospace;font-size:9px;padding:1px 6px;border-radius:8px;}
+.ebtp.m{background:rgba(93,202,165,.1);color:#5DCAA5;}
+.ebtp.r{background:rgba(216,90,48,.1);color:#D85A30;}
+.em{font-family:'Space Mono',monospace;font-size:11px;line-height:1.9;color:#9FE1CB;background:rgba(15,110,86,.06);border:.5px solid rgba(93,202,165,.12);border-radius:8px;padding:10px 12px;margin-bottom:14px;max-width:410px;text-align:left;}
+.em::before{content:'// ';}
+.end-btns{display:flex;gap:9px;justify-content:center;}
+.endb{font-family:'Space Mono',monospace;font-size:11px;padding:8px 16px;border-radius:8px;border:.5px solid;background:transparent;cursor:pointer;letter-spacing:.1em;text-transform:uppercase;transition:all .2s;}
+.endb:hover{transform:translateY(-1px);}
+@keyframes blink{0%,60%{opacity:1;}61%,100%{opacity:.2;}}
+
+/* ── Vibe Heatmap & Compass ─────────────────────────────────────────────── */
+.vmrow{display:flex;align-items:center;gap:4px;margin-bottom:2px;}
+.vmn{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.05em;width:34px;flex-shrink:0;}
+.vmbar{flex:1;height:2px;background:rgba(255,255,255,.05);border-radius:1px;}
+.vmfill{height:100%;border-radius:1px;transition:width .7s;}
+.vmp{font-family:'Space Mono',monospace;font-size:8px;color:rgba(175,169,236,.22);width:22px;text-align:right;flex-shrink:0;}
+#vcompass{position:absolute;bottom:108px;right:7px;z-index:20;pointer-events:none;width:120px;}
+.vct{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.13em;color:rgba(175,169,236,.28);margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;}
+.vhbtn{font-family:'Space Mono',monospace;font-size:8px;padding:2px 6px;border-radius:5px;background:rgba(83,74,183,.1);color:rgba(175,169,236,.28);border:.5px solid rgba(83,74,183,.18);pointer-events:all;cursor:pointer;transition:all .2s;}
+.vhbtn.on{background:rgba(93,202,165,.1);color:#5DCAA5;border-color:rgba(93,202,165,.28);}
+.vcg{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;}
+.vcd{background:rgba(255,255,255,.025);border:.5px solid rgba(83,74,183,.1);border-radius:4px;height:32px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;transition:background .5s,border-color .5s;font-family:'Space Mono',monospace;font-size:9px;color:rgba(175,169,236,.15);}
+.vcc{background:rgba(93,202,165,.05);border:.5px solid rgba(93,202,165,.18);border-radius:4px;height:32px;display:flex;align-items:center;justify-content:center;color:rgba(93,202,165,.4);font-size:13px;}
+.vcx{height:32px;}
+.vca{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;line-height:1;}
+.vcl{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:.04em;line-height:1;opacity:.85;}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ═══ INTRO ═══════════════════════════════════ -->
+<div class="scr on" id="scr-intro">
+  <div class="gl">PROTOCOL CITY · v3 · AURA RESONANCE SYSTEM</div>
+  <div class="ttl">Protocol City</div>
+  <div class="sub">solarpunk urban simulation · choose your district · enter the city</div>
+
+  <div class="aura-sec">
+    <div class="aura-lbl">SELECT YOUR AURA STATE</div>
+    <div class="aura-grid" id="aura-grid"></div>
+  </div>
+
+  <div class="tsec">
+    <div class="tsl">SIGNAL TAGS · once = align · twice = repel</div>
+    <div class="tg" id="tg"></div>
+  </div>
+
+  <div class="slw">
+    <div class="slr"><span class="sll">POPULATION</span><div class="slt" id="sl-pop"><div class="slf" id="sf-pop" style="width:55%;background:#534AB7;"></div><div class="slh" id="sh-pop" style="left:55%;background:#7F77DD;"></div></div><span class="slv" id="sv-pop" style="color:#AFA9EC">16</span></div>
+    <div class="slr"><span class="sll">PROTOCOL %</span><div class="slt" id="sl-prt"><div class="slf" id="sf-prt" style="width:63%;background:#534AB7;"></div><div class="slh" id="sh-prt" style="left:63%;background:#7F77DD;"></div></div><span class="slv" id="sv-prt" style="color:#AFA9EC">63%</span></div>
+    <div class="slr"><span class="sll">SIM SPEED</span><div class="slt" id="sl-spd"><div class="slf" id="sf-spd" style="width:40%;background:#1D9E75;"></div><div class="slh" id="sh-spd" style="left:40%;background:#5DCAA5;"></div></div><span class="slv" id="sv-spd" style="color:#5DCAA5">4</span></div>
+    <div class="slr"><span class="sll">SOCIAL RANGE</span><div class="slt" id="sl-soc"><div class="slf" id="sf-soc" style="width:50%;background:#993556;"></div><div class="slh" id="sh-soc" style="left:50%;background:#D4537E;"></div></div><span class="slv" id="sv-soc" style="color:#ED93B1">Med</span></div>
+  </div>
+  <button class="go-btn" onclick="goToMap()">View city map →</button>
+</div>
+
+<!-- ═══ MAP SCREEN ════════════════════════════════ -->
+<div class="scr" id="scr-map">
+  <div id="map-header">
+    <div>
+      <div class="map-title">PROTOCOL CITY · DISTRICT MAP</div>
+      <div class="map-sub">Select a starting district · then enter the city</div>
+    </div>
+    <button class="map-enter-btn" id="map-enter-btn" onclick="enterCity()" disabled>Enter selected district →</button>
+  </div>
+  <div id="map-body">
+    <div id="map-canvas-wrap"><canvas id="mapC"></canvas></div>
+    <div id="map-sidebar">
+      <div class="map-hint">CLICK A DISTRICT ON THE MAP OR SELECT BELOW</div>
+      <div id="district-list"></div>
+    </div>
+  </div>
+  <div id="map-footer">
+    <div class="mf-sel">Selected: <b id="mf-sel-name">None</b></div>
+    <div class="mf-legend">
+      <div class="mfl-item"><div class="mfl-dot" style="background:#534AB7"></div>Protocol zones</div>
+      <div class="mfl-item"><div class="mfl-dot" style="background:#5DCAA5"></div>Public squares</div>
+      <div class="mfl-item"><div class="mfl-dot" style="background:#FF88CC"></div>Resonance hotspot</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ GAME ══════════════════════════════════════ -->
+<div class="scr" id="scr-game">
+  <div id="world">
+    <canvas id="C"></canvas>
+    <div id="htop">
+      <div class="hp"><span id="hd" style="display:inline-block;width:5px;height:5px;border-radius:50%;background:#5DCAA5;margin-right:4px;vertical-align:middle;animation:blink 1.5s infinite;"></span>PROTOCOL CITY</div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;">
+        <div class="hp ev">TIME <b id="htime">06:00</b></div>
+        <div class="hp">ZONES <b id="hz">0/5</b></div>
+        <div class="hp">BONDS <b id="hb">0</b></div>
+        <div class="hp res">VIBES <b id="hres">0</b></div>
+        <div class="hp wr">PRESS <b id="hp2">30%</b></div>
+        <div class="hp">LEG <b id="hl">50%</b></div>
+      </div>
+    </div>
+    <div id="paura-hud">
+      <div class="pa-dot" id="pa-dot"></div>
+      <span class="pa-nm" id="pa-nm">—</span>
+      <div class="pa-bar"><div class="pa-fill" id="pa-fill"></div></div>
+    </div>
+    <div id="tbar"><div id="tfill" style="width:0%;"></div></div>
+    <div id="lstats">
+      <div class="sb"><span class="sbl">COMPLY</span><div class="sbt"><div class="sbf" id="sbc" style="width:0%;background:#AFA9EC;"></div></div></div>
+      <div class="sb"><span class="sbl">REFUSE</span><div class="sbt"><div class="sbf" id="sbr" style="width:0%;background:#F09595;"></div></div></div>
+      <div class="sb"><span class="sbl">SUBVERT</span><div class="sbt"><div class="sbf" id="sbs" style="width:0%;background:#5DCAA5;"></div></div></div>
+    </div>
+    <div id="sgraph">
+      <div class="sgt">SOCIAL GRAPH</div>
+      <div id="bl"></div>
+      <div class="sgt" id="city-mood-lbl" style="margin-top:7px;display:none;">CITY VIBE</div>
+      <div id="city-mood-bars"></div>
+    </div>
+    <div id="abar"><div class="abi">
+      <div class="anm" id="anm">THE WANDERER</div>
+      <div class="atr">
+        <div class="at2"><span class="atl">COMPLY</span><div class="atb"><div class="atf" id="atc" style="width:0%;background:#AFA9EC;"></div></div><span class="ats" id="asc">0</span></div>
+        <div class="at2"><span class="atl">REFUSE</span><div class="atb"><div class="atf" id="atr" style="width:0%;background:#F09595;"></div></div><span class="ats" id="asr">0</span></div>
+        <div class="at2"><span class="atl">SUBVERT</span><div class="atb"><div class="atf" id="ats" style="width:0%;background:#5DCAA5;"></div></div><span class="ats" id="ass">0</span></div>
+      </div>
+    </div></div>
+    <div id="kh"><div></div><div class="k" id="kw">W</div><div></div><div class="k" id="ka">A</div><div class="k" id="ks">S</div><div class="k" id="kd">D</div></div>
+    <div id="vcompass">
+      <div class="vct">VIBE MAP <span class="vhbtn on" id="vhbtn" onclick="toggleHeatmap()">ON</span></div>
+      <div class="vcg">
+        <div class="vcx"></div><div class="vcd" id="vc-n">·</div><div class="vcx"></div>
+        <div class="vcd" id="vc-w">·</div><div class="vcc">●</div><div class="vcd" id="vc-e">·</div>
+        <div class="vcx"></div><div class="vcd" id="vc-s">·</div><div class="vcx"></div>
+      </div>
+    </div>
+    <div id="efeed"></div>
+    <div id="map-btn"><button class="mbtn" onclick="backToMap()">⊞ Map</button></div>
+    <div id="enc"><div id="ecard">
+      <div class="eey" id="eey"></div>
+      <div class="eh2"><div class="edot" id="edot"></div><div class="et2" id="etitle"></div></div>
+      <div class="emem" id="emem"></div>
+      <div class="ebody" id="ebody"></div>
+      <div id="eextra"></div>
+      <div class="eres" id="eres"></div>
+      <div class="efoot"><div class="ecl" onclick="closeEnc()">← keep walking</div><div class="eprog" id="eprog"></div></div>
+    </div></div>
+    <div id="res-flash"><div class="rf-in"><div class="rf-lbl">VIBE MATCH</div><div class="rf-nm" id="rf-nm">—</div><div class="rf-sub" id="rf-sub">—</div></div></div>
+  </div>
+</div>
+
+<!-- ═══ END ═══════════════════════════════════════ -->
+<div class="scr" id="scr-end">
+  <div class="end-ey">SESSION COMPLETE · PROTOCOL CITY</div>
+  <div class="end-a" id="eaarch"></div>
+  <div class="end-s" id="easub"></div>
+  <div class="end-g" id="eagrid"></div>
+  <div class="ebw" id="ebondwrap" style="display:none;"><div class="ebt">SOCIAL GRAPH · YOUR BONDS</div><div id="eblist"></div></div>
+  <div class="em" id="eamsg"></div>
+  <div class="end-btns">
+    <button class="endb" style="color:#AFA9EC;border-color:rgba(175,169,236,.28);" onclick="goIntro()">Reconfigure ↺</button>
+    <button class="endb" style="color:#5DCAA5;border-color:rgba(93,202,165,.32);" onclick="restart()">Play again →</button>
+  </div>
+</div>
+
+<div id="veil"></div>
+<div id="vttl"><div class="ve" id="ve"></div><div class="vm" id="vm"></div><div class="vs2" id="vs2"></div></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// DATA: AURA STATES
+// ═══════════════════════════════════════════════════
+const AURA_STATES=[
+  {id:'reflective',name:'Reflective',emoji:'◎',col:'#185FA5',glow:'rgba(24,95,165,.4)',shape:'rings',burnout:.3,resonates:['reflective','memory_keeper'],repels:['high_energy'],tag:'SOLITARY'},
+  {id:'high_energy',name:'High Energy',emoji:'◈',col:'#D85A30',glow:'rgba(216,90,48,.4)',shape:'spikes',burnout:.7,resonates:['high_energy','collaborative'],repels:['reflective'],tag:'CHAOTIC'},
+  {id:'collaborative',name:'Collaborative',emoji:'◉',col:'#1D9E75',glow:'rgba(29,158,117,.4)',shape:'weave',burnout:.4,resonates:['collaborative','high_energy','reflective'],repels:[],tag:'CREATIVE'},
+  {id:'subversive',name:'Subversive',emoji:'◬',col:'#993556',glow:'rgba(153,53,86,.4)',shape:'fractal',burnout:.5,resonates:['subversive','high_energy'],repels:['reflective'],tag:'DISRUPTIVE'},
+  {id:'memory_keeper',name:'Memory Keeper',emoji:'◑',col:'#0F6E56',glow:'rgba(15,110,86,.4)',shape:'echo',burnout:.2,resonates:['memory_keeper','reflective','collaborative'],repels:['high_energy'],tag:'ARCHIVAL'},
+  {id:'open_signal',name:'Open Signal',emoji:'◯',col:'#BA7517',glow:'rgba(186,117,23,.4)',shape:'pulse',burnout:.5,resonates:['open_signal','collaborative','high_energy','reflective','subversive','memory_keeper'],repels:[],tag:'RECEPTIVE'},
+];
+let playerAura=AURA_STATES[5];
+let auraEnergy=1.0;
+let burnoutActive=false,burnoutCool=0,burnoutShield=0.5;
+
+// Build aura picker
+const agEl=document.getElementById('aura-grid');
+AURA_STATES.forEach(a=>{
+  const c=document.createElement('div');c.className='aura-card';
+  c.style.borderColor=a.col+'55';c.style.background=a.col+'0a';c.style.color=a.col;
+  c.innerHTML=`<span class="ac-nm" style="color:${a.col}">${a.emoji} ${a.name}</span><span class="ac-ds" style="color:rgba(200,190,255,.6)">${a.resonates.slice(0,2).join(', ')}</span><span class="ac-tg" style="background:${a.col}22;color:${a.col}">${a.tag}</span>`;
+  c.onclick=()=>{playerAura=a;document.querySelectorAll('.aura-card').forEach(x=>{x.classList.remove('sel');x.style.boxShadow='';});c.classList.add('sel');c.style.boxShadow=`0 0 0 1.5px ${a.col}`;updAuraHUD();};
+  if(a.id==='open_signal'){c.classList.add('sel');c.style.boxShadow=`0 0 0 1.5px ${a.col}`;}
+  agEl.appendChild(c);
+});
+
+// ═══════════════════════════════════════════════════
+// DATA: TRAITS
+// ═══════════════════════════════════════════════════
+const TRAITS=[{id:'solitude',l:'SOLITUDE',c:'#534AB7'},{id:'collective',l:'COLLECTIVE',c:'#1D9E75'},{id:'surveillance',l:'SURVEILLANCE',c:'#D85A30'},{id:'privacy',l:'PRIVACY',c:'#993556'},{id:'visibility',l:'VISIBILITY',c:'#BA7517'},{id:'anonymity',l:'ANONYMITY',c:'#185FA5'},{id:'ritual',l:'RITUAL',c:'#7F77DD'},{id:'disruption',l:'DISRUPTION',c:'#A32D2D'},{id:'memory',l:'MEMORY',c:'#0F6E56'},{id:'presence',l:'PRESENCE',c:'#854F0B'},{id:'refusal',l:'REFUSAL',c:'#888780'},{id:'consent',l:'CONSENT',c:'#5DCAA5'}];
+const ts={};TRAITS.forEach(t=>ts[t.id]=0);
+const tgEl=document.getElementById('tg');
+TRAITS.forEach(tr=>{const p=document.createElement('div');p.className='tp';p.textContent=tr.l;p.onclick=()=>{ts[tr.id]=(ts[tr.id]+1)%3;p.className='tp'+(ts[tr.id]===1?' a':ts[tr.id]===2?' r':'');p.style.borderColor=ts[tr.id]===1?tr.c:ts[tr.id]===2?'rgba(216,90,48,.45)':'';p.style.color=ts[tr.id]===1?tr.c:ts[tr.id]===2?'#F0997B':'';};tgEl.appendChild(p);});
+function pTraits(){return{al:TRAITS.filter(t=>ts[t.id]===1).map(t=>t.id),rp:TRAITS.filter(t=>ts[t.id]===2).map(t=>t.id)};}
+
+// ═══════════════════════════════════════════════════
+// SLIDERS
+// ═══════════════════════════════════════════════════
+function mkSl(tid,fid,hid,vid,min,max,ini,fmt){
+  const tr=document.getElementById(tid),fl=document.getElementById(fid),th=document.getElementById(hid),vl=document.getElementById(vid);
+  let v=ini;
+  function sv(x){v=Math.max(min,Math.min(max,x));const p=(v-min)/(max-min)*100;fl.style.width=p+'%';th.style.left=p+'%';vl.textContent=fmt(v);}
+  sv(ini);let dr=false;
+  th.addEventListener('mousedown',e=>{dr=true;e.preventDefault();});
+  document.addEventListener('mousemove',e=>{if(dr){const r=tr.getBoundingClientRect();const pc=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));sv(min+Math.round(pc*(max-min)/((max-min)/10))*((max-min)/10));}});
+  document.addEventListener('mouseup',()=>dr=false);
+  tr.addEventListener('click',e=>{const r=tr.getBoundingClientRect();const pc=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));sv(min+Math.round(pc*(max-min)/((max-min)/10))*((max-min)/10));});
+  th.addEventListener('touchstart',()=>dr=true,{passive:true});
+  document.addEventListener('touchmove',e=>{if(dr){const r=tr.getBoundingClientRect();const pc=Math.max(0,Math.min(1,(e.touches[0].clientX-r.left)/r.width));sv(min+Math.round(pc*(max-min)/((max-min)/10))*((max-min)/10));}},{passive:true});
+  document.addEventListener('touchend',()=>dr=false);
+  return()=>v;
+}
+const gPop=mkSl('sl-pop','sf-pop','sh-pop','sv-pop',4,28,16,v=>v);
+const gPrt=mkSl('sl-prt','sf-prt','sh-prt','sv-prt',10,100,63,v=>v+'%');
+const gSpd=mkSl('sl-spd','sf-spd','sh-spd','sv-spd',1,10,4,v=>v);
+const gSoc=mkSl('sl-soc','sf-soc','sh-soc','sv-soc',1,3,2,v=>['Sm','Med','Lg'][v-1]);
+
+// ═══════════════════════════════════════════════════
+// DATA: DISTRICTS (public places for the map)
+// ═══════════════════════════════════════════════════
+const DISTRICTS=[
+  {id:'transit',name:'Transit Hub',col:'#534AB7',mapX:.22,mapY:.28,radius:28,
+   desc:'The morning commute corridor. Mood auras broadcast at maximum density. Strangers share a thought whether they choose to or not.',
+   vibe:'high protocol',tags:['transit','aura','crowded'],
+   spawnGX:0,spawnGY:0,
+   resonanceHotspot:false},
+  {id:'biopark',name:'Bio-Park',col:'#1D9E75',mapX:.55,mapY:.20,radius:32,
+   desc:'A living park that responds to collective presence. Bioluminescent when quiet players gather. Territorial markers bloom at 10 minutes.',
+   vibe:'solarpunk',tags:['nature','territorial','quiet'],
+   spawnGX:5,spawnGY:-2,
+   resonanceHotspot:true},
+  {id:'cafe',name:'Signal Café',col:'#BA7517',mapX:.18,mapY:.55,radius:24,
+   desc:'8-second gaze exchanges. Thought pools. The walls are live canvases when collaborative auras dominate.',
+   vibe:'intimate',tags:['gaze','thought','creative'],
+   spawnGX:-4,spawnGY:2,
+   resonanceHotspot:false},
+  {id:'market',name:'Market Square',col:'#D85A30',mapX:.72,mapY:.52,radius:30,
+   desc:'A 1987 memory unlocks when 5+ cluster here. Smart billboards switch to collaborative canvases for creative auras.',
+   vibe:'collective',tags:['shared object','cluster','memory'],
+   spawnGX:4,spawnGY:4,
+   resonanceHotspot:true},
+  {id:'plaza',name:'Solarpunk Plaza',col:'#7F77DD',mapX:.42,mapY:.70,radius:35,
+   desc:'The collective mood vote square. Lighting responds in real time. Teenagers watch the light change and refuse to vote.',
+   vibe:'civic',tags:['vote','light','dusk'],
+   spawnGX:-1,spawnGY:6,
+   resonanceHotspot:true},
+  {id:'underpass',name:'Neon Underpass',col:'#FF88CC',mapX:.30,mapY:.44,radius:20,
+   desc:'A resonance hotspot between districts. Subversive auras cluster here. Protocol signals are weakest.',
+   vibe:'subversive',tags:['anonymous','low signal','glitch'],
+   spawnGX:1,spawnGY:2,
+   resonanceHotspot:true},
+  {id:'archive',name:'Memory Archive',col:'#0F6E56',mapX:.62,mapY:.35,radius:22,
+   desc:'Historical overlays surface here. Memory Keeper auras see 50 years of the same spot layered. Others see nothing unusual.',
+   vibe:'archival',tags:['history','trace','echo'],
+   spawnGX:3,spawnGY:-1,
+   resonanceHotspot:false},
+];
+let selectedDistrict=null;
+
+// ═══════════════════════════════════════════════════
+// DATA: SCENES (zone encounters in the isometric world)
+// ═══════════════════════════════════════════════════
+const SCENES=[
+  {id:'transit',gx:0,gy:0,h:2,label:'Transit Hub',col:'#534AB7',
+   loc:'TRANSIT HUB · 07:43',
+   story:`Every person shows a <em>mood aura</em> — visible to all nearby devices. Your profile is blank. Six strangers see the gap. A push: <b>"Enable mood sharing to reduce friction."</b>`,
+   mem:`The city holds your last choice. Strangers already know your gap.`,
+   choices:[{b:'COMPLY',t:'Enable aura · blend in',y:'g',c:`Amber aura blooms. Three strangers relax. You paid something nameless.`,dc:1,dr:0,ds:0,l:20,p:-10},{b:'REFUSE',t:'Stay blank · own the gap',y:'b',c:`Protocol flags you "unresolved presence." A stranger steps away.`,dc:0,dr:1,ds:0,l:-18,p:22},{b:'SUBVERT',t:'Mood: "fully absent"',y:'w',c:`A void-aura. Someone laughs. The system has no category for you.`,dc:0,dr:0,ds:1,l:8,p:8},{b:'OBSERVE',t:'Watch · decide nothing',y:'w',c:`The auras are honest in ways faces aren't.`,dc:0,dr:0,ds:0,l:0,p:-5}]},
+  {id:'biopark',gx:5,gy:-2,h:1,label:'Bio-Park',col:'#1D9E75',
+   loc:'BIO-PARK · 12:06',
+   story:`9 minutes seated. At 10, a <em>territorial marker</em> blooms. Two people watch your timer. <b>"Why does that person own the bench?"</b>`,
+   mem:`A ghost of your last visit lingers. The protocol hasn't cleared it.`,
+   choices:[{b:'CLAIM',t:'Stay · earn territory',y:'g',c:`The marker appears. Satisfaction and shame in equal parts.`,dc:1,dr:0,ds:0,l:20,p:-8},{b:'LEAVE',t:'Stand up at 9:58',y:'b',c:`Timer resets. A stranger claims it later.`,dc:0,dr:1,ds:0,l:-15,p:-18},{b:'GIFT',t:'Give marker to a child',y:'w',c:`Her phone buzzes. She doesn't understand. Her mother smiles.`,dc:0,dr:0,ds:1,l:4,p:4},{b:'SIT',t:'Stay · ignore the circle',y:'w',c:`Marker appears. Nobody can read your relationship to it.`,dc:0,dr:0,ds:0,l:18,p:0}]},
+  {id:'cafe',gx:-4,gy:2,h:2,label:'Signal Café',col:'#BA7517',
+   loc:'SIGNAL CAFÉ · 14:20',
+   story:`The 8-second gaze protocol active. The person opposite has looked for <em>6 seconds</em>. At 8, you receive one of their thoughts. <b>"By entering, you participate."</b>`,
+   mem:`Your previous choice left a trace. The café's model shifted 2% because of you.`,
+   choices:[{b:'RECEIVE',t:'Hold gaze · accept thought',y:'w',c:`"I haven't spoken to anyone today." Something real moved between strangers.`,dc:1,dr:0,ds:0,l:22,p:-5},{b:'REFUSE',t:'Break at 7 sec',y:'b',c:`Protocol broadcasts: "opted out at this seat, 14:21."`,dc:0,dr:1,ds:0,l:-14,p:20},{b:'SEND FIRST',t:'Pre-load thought',y:'g',c:`You send: "this system is watching us." Reply: "I know. I use it anyway."`,dc:0,dr:0,ds:1,l:14,p:9},{b:'CLOSE EYES',t:'Make gaze impossible',y:'b',c:`30 seconds, eyes closed. Their thought is addressed to no one.`,dc:0,dr:0,ds:0,l:0,p:14}]},
+  {id:'market',gx:4,gy:4,h:2,label:'Market Square',col:'#D85A30',
+   loc:'MARKET SQUARE · 11:30',
+   story:`A cluster of 7 shows a <em>shared object</em> — a 1987 memory unlocked when 5+ gather. <b>"Come stand with us. Just be physically present."</b>`,
+   mem:`Last time you stood here, you left before the object appeared.`,
+   choices:[{b:'JOIN',t:'Step in · experience it',y:'g',c:`Market sounds from 1987. Five strangers share a stranger's memory.`,dc:1,dr:0,ds:0,l:24,p:-16},{b:'DECLINE',t:'Stay outside · watch',y:'b',c:`Their faces change. You are 3 metres away in a different experience.`,dc:0,dr:1,ds:0,l:-22,p:24},{b:'JOIN→LEAVE',t:'Enter · then step out',y:'w',c:`4 seconds of the shared object. Enough to know it's a memory, not a product.`,dc:0,dr:0,ds:1,l:9,p:9},{b:'DOCUMENT',t:'Photograph the group',y:'w',c:`5 people with the same stunned expression. The photo shows nothing they're seeing.`,dc:0,dr:0,ds:0,l:4,p:0}]},
+  {id:'plaza',gx:-1,gy:6,h:1,label:'Solarpunk Plaza',col:'#7F77DD',
+   loc:'SOLARPUNK PLAZA · 19:55',
+   story:`The plaza's <em>collective mood vote</em> open. Positive → lighting warms. Negative → dims. A teenager, phone off: <b>"I stopped voting two months ago. I just watch it now."</b>`,
+   mem:`The light is the same shade it was when you last voted. You made this.`,
+   choices:[{b:'VOTE +',t:'Vote warmth',y:'g',c:`Light shifts — barely warmer. A chord with no instrument plays 4 seconds.`,dc:1,dr:0,ds:0,l:18,p:-14},{b:'ABSTAIN',t:'Let window close',y:'b',c:`The atmosphere is someone else's feeling. Peaceful and not yours.`,dc:0,dr:1,ds:0,l:-18,p:10},{b:'VOTE −',t:'Vote disruption',y:'w',c:`Light dims. The teenager laughs — short, real.`,dc:0,dr:0,ds:1,l:9,p:19},{b:'ASK HER',t:'Ask what she sees now',y:'g',c:`"I see everyone else's feelings and none of mine. It's kind of beautiful."`,dc:0,dr:0,ds:0,l:0,p:-12}]},
+];
+
+// ═══════════════════════════════════════════════════
+// DATA: AI-CITY BUILDINGS (irregular heights like a real skyline)
+// Heights vary 1-12 — no uniformity. Asymmetric profiles.
+// ═══════════════════════════════════════════════════
+const BLDGS=[
+  // ── Tall spires (h 8-12) ───────────────────
+  {gx:1,gy:-4,h:12,t:'#141430',s:'#0d0d25',d:'#090918',type:'spire'},
+  {gx:7,gy:-2,h:10,t:'#121f12',s:'#0c180c',d:'#090f09',type:'spire'},
+  {gx:-5,gy:1,h:9,t:'#1a0a0a',s:'#120606',d:'#0c0404',type:'spire'},
+  {gx:6,gy:3,h:8,t:'#1a1a30',s:'#101025',d:'#0c0c1a',type:'tower'},
+  {gx:-4,gy:-1,h:8,t:'#181830',s:'#101028',d:'#0c0c1e',type:'tower'},
+  // ── Mid towers (h 4-7) ─────────────────────
+  {gx:-3,gy:-2,h:6,t:'#1e1e40',s:'#10102a',d:'#0c0c1e',type:'tower'},
+  {gx:3,gy:-3,h:5,t:'#1c1c38',s:'#12122a',d:'#0e0e1e',type:'tower'},
+  {gx:8,gy:1,h:5,t:'#121a12',s:'#0c120c',d:'#080d08',type:'tower'},
+  {gx:-6,gy:4,h:4,t:'#281a0c',s:'#1c1208',d:'#130d05',type:'mid'},
+  {gx:5,gy:2,h:4,t:'#1e2a18',s:'#141f10',d:'#0e160a',type:'mid'},
+  {gx:-2,gy:-3,h:4,t:'#20181a',s:'#181012',d:'#100c0c',type:'mid'},
+  {gx:2,gy:8,h:4,t:'#1a1a38',s:'#101030',d:'#0e0e22',type:'mid'},
+  // ── Low blocks (h 1-3) ────────────────────
+  {gx:-7,gy:2,h:3,t:'#1a1208',s:'#130e05',d:'#0d0903',type:'low'},
+  {gx:9,gy:-1,h:3,t:'#0f1a0f',s:'#0c150c',d:'#090f09',type:'low'},
+  {gx:-3,gy:6,h:2,t:'#181828',s:'#101020',d:'#0c0c18',type:'low'},
+  {gx:6,gy:6,h:2,t:'#1e1a10',s:'#161408',d:'#100e06',type:'low'},
+  {gx:-5,gy:7,h:2,t:'#281a10',s:'#1c1208',d:'#130d06',type:'low'},
+  {gx:0,gy:-5,h:1,t:'#181830',s:'#101025',d:'#0c0c1a',type:'flat'},
+  {gx:3,gy:7,h:1,t:'#141810',s:'#0e100a',d:'#090c07',type:'flat'},
+  {gx:-1,gy:9,h:1,t:'#1e1a18',s:'#161410',d:'#100e0c',type:'flat'},
+  {gx:8,gy:5,h:3,t:'#0f180f',s:'#0c110c',d:'#080c08',type:'low'},
+  {gx:-8,gy:5,h:2,t:'#1e1408',s:'#160e06',d:'#100a04',type:'low'},
+  // ── Solarpunk organic forms (h 2-5) ────────
+  {gx:2,gy:-5,h:3,t:'#0f2010',s:'#0a1a0a',d:'#071207',type:'organic'},
+  {gx:-3,gy:4,h:3,t:'#201820',s:'#181018',d:'#100c10',type:'organic'},
+  {gx:4,gy:-4,h:2,t:'#1a2818',s:'#121e10',d:'#0e160a',type:'organic'},
+];
+
+// ═══════════════════════════════════════════════════
+// GROUND TILES
+// ═══════════════════════════════════════════════════
+const GND=[];
+for(let gx=-10;gx<=11;gx++)for(let gy=-7;gy<=11;gy++){
+  const bk=BLDGS.some(b=>b.gx===gx&&b.gy===gy)||SCENES.some(s=>s.gx===gx&&s.gy===gy);
+  GND.push({gx,gy,bk});
+}
+
+// ═══════════════════════════════════════════════════
+// NPC SYSTEM
+// ═══════════════════════════════════════════════════
+const NAMES=['Mira','Ezra','Sable','Cleo','Oren','Vex','Dara','Luca','Tove','Remy','Noel','Zuri','Kael','Pita','Soma','Riku'];
+const TID=TRAITS.map(t=>t.id);
+let npcs=[];
+function mkNPC(i){
+  const as=AURA_STATES[Math.floor(Math.random()*AURA_STATES.length)];
+  const ints=TID.filter(()=>Math.random()>.55).slice(0,3);
+  const reps=TID.filter(x=>!ints.includes(x)&&Math.random()>.7).slice(0,2);
+  const gx=-7+Math.random()*14,gy=-5+Math.random()*13;
+  return{id:'n'+i,name:NAMES[i%NAMES.length],gx,gy,
+    tx:gx+(Math.random()-.5)*4,ty:gy+(Math.random()-.5)*4,
+    spd:.003+Math.random()*.005,vx:(Math.random()-.5)*.006,vy:(Math.random()-.5)*.006,
+    auraState:as,col:as.col,ints,reps,tag:as.name.toUpperCase(),
+    tagT:Math.floor(Math.random()*200),react:false,reactT:0,
+    bonded:false,bondWith:null,bondType:null,
+    state:'wander',stateT:0,mood:Math.random()>.5?'open':'closed',
+    protocol:Math.random()>.4?'comply':'refuse',phase:Math.random()*Math.PI*2,
+    auraEnergy:.7+Math.random()*.3,walkPhase:Math.random()*Math.PI*2,
+    clusterTarget:null};
+}
+function initNPCs(n){npcs=[];for(let i=0;i<n;i++)npcs.push(mkNPC(i));}
+function matchScore(npc){
+  const pt=pTraits();let m=0,cl=0;
+  npc.ints.forEach(i=>{if(pt.al.includes(i))m++;if(pt.rp.includes(i))cl++;});
+  npc.reps.forEach(r=>{if(pt.al.includes(r))cl++;if(pt.rp.includes(r))m++;});
+  if(playerAura.resonates.includes(npc.auraState.id))m+=2;
+  if(playerAura.repels.includes(npc.auraState.id))cl+=2;
+  return{mutual:m,clash:cl,total:m-cl};
+}
+function tickNPC(n,dt){
+  n.stateT+=dt;
+  if(n.state==='wander'){if(n.stateT>2000+Math.random()*3000){n.tx=-7+Math.random()*14;n.ty=-5+Math.random()*13;n.stateT=0;if(Math.random()>.7)n.state='cluster';}}
+  else if(n.state==='cluster'){
+    const near=npcs.filter(o=>o.id!==n.id&&Math.hypot(o.gx-n.gx,o.gy-n.gy)<5);
+    if(near.length>0&&!n.clusterTarget){const tgt=near[Math.floor(Math.random()*near.length)];n.clusterTarget=tgt.id;n.tx=tgt.gx+(Math.random()-.5)*.8;n.ty=tgt.gy+(Math.random()-.5)*.8;}
+    if(n.stateT>4000){n.state='wander';n.stateT=0;n.clusterTarget=null;}
+  }
+  const dx=n.tx-n.gx,dy=n.ty-n.gy,dist=Math.hypot(dx,dy);
+  const spd=n.spd*(1+(GS.prt-50)/200)*(GS.simSpd/4);
+  if(dist>.15){n.gx+=dx*spd;n.gy+=dy*spd;}else{n.stateT+=2000;}
+  n.gx=Math.max(-9,Math.min(10,n.gx));n.gy=Math.max(-6,Math.min(10,n.gy));
+  if(!n.bonded&&Math.random()>.998){
+    const near=npcs.filter(o=>o.id!==n.id&&!o.bonded&&Math.hypot(o.gx-n.gx,o.gy-n.gy)<1.5);
+    if(near.length){const other=near[0];const shared=n.ints.filter(i=>other.ints.includes(i));if(shared.length>0){const bt=Math.random()>.3?'mutual':'clash';n.bonded=true;n.bondWith=other.id;n.bondType=bt;other.bonded=true;other.bondWith=n.id;other.bondType=bt;}}
+  }
+  n.walkPhase+=dt*.006;n.tagT++;if(n.tagT>320)n.tagT=0;
+  n.auraEnergy=.5+.5*Math.sin(n.walkPhase*.3+n.phase);
+}
+
+// ═══════════════════════════════════════════════════
+// NPC ACTIONS & RITUALS
+// ═══════════════════════════════════════════════════
+const NPC_ACTS=[
+  {id:'bond',l:'RESONATE',t:'Form a resonant bond',d:'Your auras align. The city logs you as a resonant pair.',e:'c',cost:'−5 pressure'},
+  {id:'exchange',l:'EXCHANGE',t:'Trade signal tags',d:'Exchange one interest tag each.',e:'c',cost:'+8 legibility'},
+  {id:'ritual',l:'RITUAL',t:'Shared ritual',d:'Perform an unverified act together. No protocol.',e:'c',cost:'opens ritual menu'},
+  {id:'pass',l:'PASS',t:'Acknowledge and move on',d:'A nod. No record.',e:'n',cost:'no change'},
+  {id:'diverge',l:'DIVERGE',t:'Divergence ritual',d:'Acknowledge conflicting auras and move apart.',e:'r',cost:'+1 subvert'},
+  {id:'challenge',l:'CHALLENGE',t:'Challenge their stance',d:'Why do they comply or refuse?',e:'r',cost:'+10 pressure'},
+];
+const RITUALS=[
+  {id:'silence',n:'SILENCE ZONE',d:'Both go dark 10 seconds. No broadcast.',e:'Pressure −12',fn:()=>{GS.prs=Math.max(0,GS.prs-12);}},
+  {id:'broadcast',n:'OPEN BROADCAST',d:'Announce interests to 5-tile radius.',e:'Legibility +15',fn:()=>{GS.leg=Math.min(100,GS.leg+15);}},
+  {id:'aura_swap',n:'AURA SWAP',d:'Wear each other\'s mood aura.',e:'Subvert +1, pressure −6',fn:()=>{GS.subvert++;GS.prs=Math.max(0,GS.prs-6);}},
+  {id:'void_walk',n:'VOID WALK',d:'Both disable signals and walk together.',e:'Refuse +1, legibility −10',fn:()=>{GS.refuse++;GS.leg=Math.max(0,GS.leg-10);}},
+];
+
+// ═══════════════════════════════════════════════════
+// GAME STATE
+// ═══════════════════════════════════════════════════
+let GS={comply:0,refuse:0,subvert:0,leg:50,prs:30,visited:new Set(),visitCount:{},bonds:[],rituals:[],resonances:0,gameOver:false,prt:63,simSpd:4,socR:2};
+let rings=[],sparks=[],floats=[];
+let encOpen=false,nearCool=0,lastNear=null,resCool=0,curScr='intro';
+let dayMinutes=360;
+const DAY_EVENTS=[{t:420,id:'mr',msg:'Morning rush. Protocol density +40%.'},{t:720,id:'ml',msg:'Midday lull. Connections easier.'},{t:900,id:'ah',msg:'Afternoon heat. Pressure rises.'},{t:1080,id:'ed',msg:'Evening drift. NPCs cluster.'},{t:1260,id:'nm',msg:'Night mode. Surveillance active.'}];
+let firedEvs=new Set();
+const WEATHERS=['clear','fog','rain','wind'];
+let weather='clear',wTimer=0,wNext=600,rainD=[];
+function initRain(){rainD=[];for(let i=0;i<60;i++)rainD.push({x:Math.random()*CW,y:Math.random()*CH,spd:3+Math.random()*2,a:Math.random()*.4+.1});}
+function timeStr(m){const h=Math.floor(m/60)%24,mm=Math.floor(m%60);return String(h).padStart(2,'0')+':'+String(mm).padStart(2,'0');}
+
+// ═══════════════════════════════════════════════════
+// CANVAS & PLAYER
+// ═══════════════════════════════════════════════════
+const cv=document.getElementById('C'),ctx=cv.getContext('2d');
+let CW,CH,dpr;
+function rsz(){dpr=window.devicePixelRatio||1;CW=cv.offsetWidth;CH=cv.offsetHeight;cv.width=CW*dpr;cv.height=CH*dpr;ctx.scale(dpr,dpr);}
+window.addEventListener('resize',()=>{rsz();rszMap();});
+const T=42;
+function s2w(gx,gy){return{x:CW/2+(gx-gy)*T,y:CH*.4+(gx+gy)*T*.5};}
+const PL={gx:0,gy:0,tx:0,ty:0,mv:false,tr:[],walkPhase:0};
+const K={w:false,a:false,s:false,d:false};
+let camX=0,camY=0;
+document.addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(['w','a','s','d','arrowup','arrowleft','arrowdown','arrowright'].includes(k))e.preventDefault();if(k==='w'||k==='arrowup')K.w=true;if(k==='a'||k==='arrowleft')K.a=true;if(k==='s'||k==='arrowdown')K.s=true;if(k==='d'||k==='arrowright')K.d=true;updK();});
+document.addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(k==='w'||k==='arrowup')K.w=false;if(k==='a'||k==='arrowleft')K.a=false;if(k==='s'||k==='arrowdown')K.s=false;if(k==='d'||k==='arrowright')K.d=false;updK();});
+function updK(){['w','a','s','d'].forEach(k=>document.getElementById('k'+k).className='k'+(K[k]?' on':''));}
+cv.addEventListener('click',e=>{
+  if(encOpen)return;
+  const r=cv.getBoundingClientRect(),mx=e.clientX-r.left-camX,my=e.clientY-r.top-camY;
+  for(const sc of SCENES){const p=s2w(sc.gx,sc.gy);if(Math.hypot(mx-p.x,my-(p.y+T*.5-sc.h*16))<T*1.5){PL.tx=sc.gx;PL.ty=sc.gy;PL.mv=true;return;}}
+  for(const n of npcs){const p=s2w(n.gx,n.gy);if(Math.hypot(mx-p.x,my-(p.y+T*.5))<20){clickNPC(n);return;}}
+  const ix=(mx-CW/2)/T,iy=(my-CH*.4)/(T*.5);PL.tx=Math.round((ix+iy)/2);PL.ty=Math.round((iy-ix)/2);PL.mv=true;
+});
+
+// ═══════════════════════════════════════════════════
+// MAP CANVAS
+// ═══════════════════════════════════════════════════
+const mapCv=document.getElementById('mapC'),mCtx=mapCv.getContext('2d');
+let mW,mH;
+function rszMap(){
+  const wrap=document.getElementById('map-canvas-wrap');
+  mW=wrap.offsetWidth;mH=wrap.offsetHeight;
+  mapCv.width=mW*(window.devicePixelRatio||1);mapCv.height=mH*(window.devicePixelRatio||1);
+  mCtx.scale(window.devicePixelRatio||1,window.devicePixelRatio||1);
+  drawMap();
+}
+function drawMap(){
+  if(!mW||!mH)return;
+  mCtx.clearRect(0,0,mW,mH);
+  // ── City background with district zones ──
+  // Dark city base
+  mCtx.fillStyle='#03030e';mCtx.fillRect(0,0,mW,mH);
+  // Grid lines (city blocks)
+  mCtx.strokeStyle='rgba(83,74,183,.06)';mCtx.lineWidth=.5;
+  const gSize=Math.min(mW,mH)/14;
+  for(let x=0;x<mW;x+=gSize){mCtx.beginPath();mCtx.moveTo(x,0);mCtx.lineTo(x,mH);mCtx.stroke();}
+  for(let y=0;y<mH;y+=gSize){mCtx.beginPath();mCtx.moveTo(0,y);mCtx.lineTo(mW,y);mCtx.stroke();}
+  // City blocks as isometric hint overlay
+  for(let i=0;i<30;i++){
+    const bx=Math.random()*mW,by=Math.random()*mH;
+    const bw=gSize*(.5+Math.random()*.8),bh=gSize*(.3+Math.random()*.6);
+    mCtx.fillStyle=`rgba(${10+Math.random()*15},${10+Math.random()*15},${20+Math.random()*20},.6)`;
+    mCtx.fillRect(bx,by,bw,bh);
+  }
+  // Roads
+  mCtx.strokeStyle='rgba(83,74,183,.12)';mCtx.lineWidth=2;
+  [[.5,0,.5,1],[0,.42,1,.42],[0,.6,1,.6],[.35,0,.35,1],[.7,0,.7,.42]].forEach(([x1,y1,x2,y2])=>{
+    mCtx.beginPath();mCtx.moveTo(x1*mW,y1*mH);mCtx.lineTo(x2*mW,y2*mH);mCtx.stroke();
+  });
+
+  // ── Vibe zones (soft glow areas) ──
+  DISTRICTS.forEach(d=>{
+    const x=d.mapX*mW,y=d.mapY*mH,r=d.radius*(mW/400);
+    // Aura glow
+    const g=mCtx.createRadialGradient(x,y,0,x,y,r*1.8);
+    g.addColorStop(0,d.col+'33');g.addColorStop(1,d.col+'00');
+    mCtx.fillStyle=g;mCtx.beginPath();mCtx.arc(x,y,r*1.8,0,Math.PI*2);mCtx.fill();
+  });
+
+  // ── District nodes ──
+  DISTRICTS.forEach(d=>{
+    const x=d.mapX*mW,y=d.mapY*mH,r=d.radius*(mW/400);
+    const isSel=selectedDistrict&&selectedDistrict.id===d.id;
+    // Pulse ring
+    const now=Date.now()*.001;
+    const pulseR=r*(1+.15*Math.sin(now*2+d.mapX*10));
+    mCtx.beginPath();mCtx.arc(x,y,pulseR,0,Math.PI*2);
+    mCtx.strokeStyle=d.col+(isSel?'cc':'55');mCtx.lineWidth=isSel?2:1;mCtx.stroke();
+    // Inner fill
+    mCtx.beginPath();mCtx.arc(x,y,r*.65,0,Math.PI*2);
+    mCtx.fillStyle=isSel?d.col+'44':d.col+'22';mCtx.fill();
+    // Resonance hotspot indicator
+    if(d.resonanceHotspot){
+      mCtx.beginPath();mCtx.arc(x,y,r*.25,0,Math.PI*2);
+      mCtx.fillStyle='#FF88CC'+(isSel?'99':'55');mCtx.fill();
+    }
+    // District name
+    mCtx.font=`700 ${Math.round(r*.28+8)}px 'Space Mono',monospace`;
+    mCtx.textAlign='center';
+    mCtx.fillStyle=isSel?d.col:'rgba(175,169,236,.7)';
+    mCtx.fillText(d.name,x,y+r*.9+14*(mW/400));
+    // Vibe tag
+    mCtx.font=`400 ${Math.round(r*.16+5)}px 'Space Mono',monospace`;
+    mCtx.fillStyle=d.col+'99';
+    mCtx.fillText('['+d.vibe+']',x,y+r*.9+26*(mW/400));
+  });
+
+  // ── Selection ring ──
+  if(selectedDistrict){
+    const d=selectedDistrict,x=d.mapX*mW,y=d.mapY*mH,r=d.radius*(mW/400);
+    const now=Date.now()*.001;
+    mCtx.beginPath();mCtx.arc(x,y,r*1.2+4*Math.sin(now*3),0,Math.PI*2);
+    mCtx.strokeStyle='#5DCAA5';mCtx.lineWidth=1.5;
+    mCtx.setLineDash([4,4]);mCtx.stroke();mCtx.setLineDash([]);
+  }
+
+  // ── Connection lines between districts ──
+  const connections=[[0,5],[5,2],[5,4],[1,6],[6,3],[3,4],[0,2],[1,4]];
+  mCtx.strokeStyle='rgba(83,74,183,.15)';mCtx.lineWidth=.8;mCtx.setLineDash([3,6]);
+  connections.forEach(([a,b])=>{if(a<DISTRICTS.length&&b<DISTRICTS.length){mCtx.beginPath();mCtx.moveTo(DISTRICTS[a].mapX*mW,DISTRICTS[a].mapY*mH);mCtx.lineTo(DISTRICTS[b].mapX*mW,DISTRICTS[b].mapY*mH);mCtx.stroke();}});
+  mCtx.setLineDash([]);
+
+  // Schedule redraw for pulse animation
+  if(curScr==='map')requestAnimationFrame(()=>drawMap());
+}
+mapCv.addEventListener('click',e=>{
+  const r=mapCv.getBoundingClientRect();
+  const mx=e.clientX-r.left,my=e.clientY-r.top;
+  DISTRICTS.forEach(d=>{
+    const x=d.mapX*mW,y=d.mapY*mH,dr=d.radius*(mW/400)*1.4;
+    if(Math.hypot(mx-x,my-y)<dr)selectDistrict(d);
+  });
+});
+function selectDistrict(d){
+  selectedDistrict=d;
+  document.getElementById('map-enter-btn').disabled=false;
+  document.getElementById('mf-sel-name').textContent=d.name;
+  // Update sidebar selection
+  document.querySelectorAll('.district-card').forEach(c=>c.classList.remove('selected'));
+  const card=document.getElementById('dc-'+d.id);if(card)card.classList.add('selected');
+  drawMap();
+}
+
+// Build sidebar district cards
+function buildDistrictList(){
+  const list=document.getElementById('district-list');list.innerHTML='';
+  DISTRICTS.forEach(d=>{
+    const card=document.createElement('div');card.className='district-card';card.id='dc-'+d.id;
+    card.innerHTML=`<div class="dc-dot-row"><div class="dc-dot" style="background:${d.col}"></div><span class="dc-name">${d.name}</span>${d.resonanceHotspot?`<span class="dc-vibe" style="background:#FF88CC22;color:#FF88CC">✦ resonance</span>`:''}</div><div class="dc-desc">${d.desc}</div><div class="dc-tags">${d.tags.map(t=>`<span class="dc-tag">${t}</span>`).join('')}</div>`;
+    card.onclick=()=>selectDistrict(d);
+    list.appendChild(card);
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// SCREEN TRANSITIONS
+// ═══════════════════════════════════════════════════
+function showScr(id,title,sub,eye){
+  const vl=document.getElementById('veil'),vt=document.getElementById('vttl');
+  vl.classList.add('on');
+  setTimeout(()=>{
+    document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
+    curScr=id;
+    if(title){document.getElementById('vm').textContent=title;document.getElementById('vs2').textContent=sub||'';document.getElementById('ve').textContent=eye||'';vt.classList.add('on');setTimeout(()=>{vt.classList.remove('on');document.getElementById(id).classList.add('on');setTimeout(()=>vl.classList.remove('on'),60);},880);}
+    else{document.getElementById(id).classList.add('on');setTimeout(()=>vl.classList.remove('on'),60);}
+  },440);
+}
+function goToMap(){
+  buildDistrictList();
+  showScr('scr-map');
+  setTimeout(()=>{rszMap();},500);
+}
+function enterCity(){
+  if(!selectedDistrict)return;
+  GS.prt=parseInt(gPrt());GS.simSpd=gSpd();GS.socR=gSoc();
+  initGame(selectedDistrict);
+  showScr('scr-game',selectedDistrict.name,'Entering — your aura is live.','ENTERING');
+}
+function backToMap(){showScr('scr-map');setTimeout(()=>drawMap(),100);}
+function goIntro(){selectedDistrict=null;showScr('scr-intro');}
+function restart(){
+  if(selectedDistrict)initGame(selectedDistrict);
+  showScr('scr-game',selectedDistrict?selectedDistrict.name:'Protocol City','The city remembers.','RETURNING');
+}
+
+function initGame(district){
+  GS={comply:0,refuse:0,subvert:0,leg:50,prs:30,visited:new Set(),visitCount:{},bonds:[],rituals:[],resonances:0,gameOver:false,prt:GS.prt||63,simSpd:GS.simSpd||4,socR:GS.socR||2};
+  const spawnGX=district?district.spawnGX:0;
+  const spawnGY=district?district.spawnGY:0;
+  PL.gx=spawnGX;PL.gy=spawnGY;PL.tx=spawnGX;PL.ty=spawnGY;PL.mv=false;PL.tr=[];PL.walkPhase=0;
+  encOpen=false;nearCool=0;lastNear=null;resCool=0;rings=[];sparks=[];floats=[];
+  auraEnergy=1.0;burnoutActive=false;burnoutCool=0;
+  dayMinutes=360;firedEvs=new Set();weather='clear';wTimer=0;
+  initNPCs(gPop());initRain();rsz();updHUD();updAuraHUD();
+}
+
+// ═══════════════════════════════════════════════════
+// DRAW — isometric world with varied AI-city buildings
+// ═══════════════════════════════════════════════════
+function gcol(gx,gy,dn){
+  const nt=Math.max(0,Math.min(1,(dn-.55)*4));
+  const v=(Math.sin(gx*1.4+gy*.8)*.5+.5)*.09;
+  const b=Math.round((36+v*18)*(1-nt*.18));
+  return `rgb(${b},${b},${Math.round(b*2.1)})`;
+}
+function brighten(col,f){
+  if(!col||col[0]!=='#')return col;
+  return'#'+[1,3,5].map(i=>Math.min(255,Math.round(parseInt(col.slice(i,i+2),16)*f)).toString(16).padStart(2,'0')).join('');
+}
+function skyGrad(dn){
+  const h=dn*24;
+  if(h<5)return['#01010a','#030316'];
+  if(h<8){const f=(h-5)/3;return[lerp('#01010a','#08060f',f),lerp('#030316','#0e0b1e',f)];}
+  if(h<17)return['#06050d','#0c0a1c'];
+  if(h<20){const f=(h-17)/3;return[lerp('#06050d','#07061a',f),lerp('#0c0a1c','#100e28',f)];}
+  return['#07061a','#100e28'];
+}
+function lerp(a,b,t){const ah=[parseInt(a.slice(1,3),16),parseInt(a.slice(3,5),16),parseInt(a.slice(5,7),16)];const bh=[parseInt(b.slice(1,3),16),parseInt(b.slice(3,5),16),parseInt(b.slice(5,7),16)];return'#'+ah.map((v,i)=>Math.round(v+(bh[i]-v)*t).toString(16).padStart(2,'0')).join('');}
+function face(pts,f){ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();ctx.fillStyle=f;ctx.fill();}
+
+function dTile(gx,gy,tc,sc,dc,h,type,bAlpha=1){
+  // Boost building colours so they're visible against the dark sky
+  if(tc&&tc[0]==='#'&&tc.length===7){tc=brighten(tc,2.8);sc=brighten(sc,2.8);dc=brighten(dc,2.2);}
+  const HH=h*16,p=s2w(gx,gy);
+  const top=[{x:p.x,y:p.y-HH},{x:p.x+T,y:p.y+T*.5-HH},{x:p.x,y:p.y+T-HH},{x:p.x-T,y:p.y+T*.5-HH}];
+  const right=[{x:p.x+T,y:p.y+T*.5-HH},{x:p.x,y:p.y+T-HH},{x:p.x,y:p.y+T},{x:p.x+T,y:p.y+T*.5}];
+  const left=[{x:p.x-T,y:p.y+T*.5-HH},{x:p.x,y:p.y+T-HH},{x:p.x,y:p.y+T},{x:p.x-T,y:p.y+T*.5}];
+  ctx.globalAlpha=bAlpha;
+  face(left,dc);face(right,sc);face(top,tc);
+  // Draw window grid for tall buildings
+  if(type==='spire'||type==='tower'){
+    const winRows=Math.floor(h*1.5),winCols=2;
+    const bx=p.x,by=p.y+T*.5-HH;
+    for(let r=0;r<winRows;r++){
+      for(let side=0;side<2;side++){
+        // Right face windows
+        if(side===0&&Math.random()>.3){
+          const wx=bx+T*.2+side*T*.3+(r*.1)*T;
+          const wy=by+(r/winRows)*(HH*.8)+T*.1;
+          const brightness=.05+Math.random()*.25;
+          ctx.fillStyle=`rgba(255,220,150,${brightness})`;
+          ctx.fillRect(wx,wy,T*.12,T*.09);
+        }
+        // Left face windows
+        if(side===1&&Math.random()>.35){
+          const wx=bx-T*.5+side*.1*T;
+          const wy=by+(r/winRows)*(HH*.8)+T*.1;
+          const brightness=.04+Math.random()*.18;
+          ctx.fillStyle=`rgba(255,220,150,${brightness})`;
+          ctx.fillRect(wx,wy,T*.1,T*.08);
+        }
+      }
+    }
+    // Antenna/spire on top of tallest buildings
+    if(h>7){
+      ctx.strokeStyle=tc;ctx.lineWidth=.8;ctx.globalAlpha=bAlpha*.4;
+      ctx.beginPath();ctx.moveTo(p.x,p.y-HH);ctx.lineTo(p.x,p.y-HH-h*4);ctx.stroke();
+      ctx.globalAlpha=bAlpha;
+      ctx.beginPath();ctx.arc(p.x,p.y-HH-h*4,1.5,0,Math.PI*2);
+      ctx.fillStyle='rgba(255,100,100,.6)';ctx.fill();// blinking antenna light
+    }
+  }
+  // Organic solarpunk buildings get green patches
+  if(type==='organic'){
+    ctx.fillStyle='rgba(29,158,117,.15)';
+    const sx=p.x,sy=p.y-HH;
+    ctx.beginPath();ctx.arc(sx+T*.2,sy+T*.2,T*.25,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(sx-T*.15,sy+T*.35,T*.2,0,Math.PI*2);ctx.fill();
+  }
+  // Roof structures for mid buildings
+  if(type==='mid'&&Math.random()>.4){
+    const rx=p.x+(Math.random()-.5)*T*.5,ry=p.y-HH;
+    ctx.fillStyle=sc;ctx.fillRect(rx,ry-6,T*.2,6);
+    ctx.fillStyle=tc;ctx.fillRect(rx,ry-8,T*.2,2);
+  }
+  // Edge outlines — make building shapes clearly visible
+  ctx.strokeStyle='rgba(140,130,230,.22)';ctx.lineWidth=1;
+  [top,right,left].forEach(face=>{ctx.beginPath();face.forEach((pt,i)=>i?ctx.lineTo(pt.x,pt.y):ctx.moveTo(pt.x,pt.y));ctx.closePath();ctx.stroke();});
+  ctx.globalAlpha=1;
+}
+
+function dGnd(gx,gy,dn,vibeCol){
+  const p=s2w(gx,gy),pts=[{x:p.x,y:p.y},{x:p.x+T,y:p.y+T*.5},{x:p.x,y:p.y+T},{x:p.x-T,y:p.y+T*.5}];
+  ctx.beginPath();pts.forEach((pt,i)=>i?ctx.lineTo(pt.x,pt.y):ctx.moveTo(pt.x,pt.y));ctx.closePath();
+  if(vibeCol){
+    ctx.fillStyle=gcol(gx,gy,dn);ctx.fill();
+    ctx.fillStyle=vibeCol;ctx.globalAlpha=.12;ctx.fill();ctx.globalAlpha=1;
+  } else {ctx.fillStyle=gcol(gx,gy,dn);ctx.fill();}
+  ctx.strokeStyle='rgba(83,74,183,.04)';ctx.lineWidth=.3;ctx.stroke();
+}
+
+function dScene(sc,ts,dn){
+  const HH=sc.h*16,p=s2w(sc.gx,sc.gy),cx=p.x,cy=p.y+T*.5-HH;
+  const vis=GS.visited.has(sc.id);
+  const district=DISTRICTS.find(d=>d.id===sc.id);
+  const tileCol=district?district.col:sc.col;
+  dTile(sc.gx,sc.gy,tileCol+'55',tileCol+'33',tileCol+'22',sc.h,'scene');
+  if(!vis){
+    const pulse=.5+.4*Math.sin(ts*.0018+sc.gx);
+    ctx.beginPath();ctx.arc(cx,cy,24+4*Math.sin(ts*.002),0,Math.PI*2);
+    ctx.fillStyle=tileCol;ctx.globalAlpha=pulse*.22*(GS.prt/80);ctx.fill();ctx.globalAlpha=1;
+    ctx.font=`700 8px 'Space Mono',monospace`;ctx.textAlign='center';ctx.fillStyle=tileCol;ctx.globalAlpha=.85;
+    ctx.fillText(sc.label,cx,cy-26);ctx.globalAlpha=1;
+    // Direction arrow if this is starting district
+    if(selectedDistrict&&selectedDistrict.id===sc.id&&Math.abs(PL.gx-sc.gx)+Math.abs(PL.gy-sc.gy)>2){
+      ctx.font=`700 10px monospace`;ctx.textAlign='center';ctx.fillStyle=tileCol;ctx.globalAlpha=.6;ctx.fillText('▼',cx,cy-36);ctx.globalAlpha=1;
+    }
+  } else {ctx.font=`400 7px 'Space Mono',monospace`;ctx.textAlign='center';ctx.fillStyle='rgba(83,74,183,.35)';ctx.fillText('visited',cx,cy-8);}
+}
+
+function dNPC(n,ts,dn){
+  const p=s2w(n.gx,n.gy),sx=p.x,sy=p.y+T*.5-3,sc=.72;
+  const pulse=Math.sin(ts*.001+n.phase),nd=dn>.7||dn<.1?.6:1;
+  const as=n.auraState;
+  // Bond line
+  if(n.bonded&&n.bondWith&&n.bondWith!=='player'){const other=npcs.find(o=>o.id===n.bondWith);if(other){const op=s2w(other.gx,other.gy);ctx.beginPath();ctx.moveTo(sx,sy-10);ctx.lineTo(op.x,op.y+T*.5-10);const lg=ctx.createLinearGradient(sx,sy,op.x,op.y);const lc=n.bondType==='mutual'?'rgba(93,202,165,':'rgba(216,90,48,';lg.addColorStop(0,lc+'.22)');lg.addColorStop(1,lc+'.04)');ctx.strokeStyle=lg;ctx.lineWidth=.7;ctx.setLineDash(n.bondType==='mutual'?[3,3]:[2,4]);ctx.stroke();ctx.setLineDash([]);}}
+  // Aura shape
+  ctx.globalAlpha=nd*(.08+pulse*.04*(GS.prt/80))*n.auraEnergy;
+  const ar=(14+pulse*3)*sc*(.5+n.auraEnergy*.5);
+  if(as.shape==='rings'){for(let ri=0;ri<3;ri++){ctx.beginPath();ctx.arc(sx,sy+15*sc,ar-ri*3.5,0,Math.PI*2);ctx.strokeStyle=as.col;ctx.lineWidth=.6;ctx.stroke();}}
+  else if(as.shape==='spikes'){ctx.beginPath();for(let i=0;i<8;i++){const ang=(i/8)*Math.PI*2+ts*.002;const rr=i%2===0?ar:ar*.5;i===0?ctx.moveTo(sx+rr*Math.cos(ang),sy+15*sc+rr*Math.sin(ang)*.45):ctx.lineTo(sx+rr*Math.cos(ang),sy+15*sc+rr*Math.sin(ang)*.45);}ctx.closePath();ctx.fillStyle=as.col;ctx.fill();}
+  else if(as.shape==='echo'){for(let ri=0;ri<4;ri++){ctx.beginPath();ctx.arc(sx,sy+15*sc,ar*(.5+ri*.16),0,Math.PI*2);ctx.strokeStyle=as.col;ctx.lineWidth=.7*(1-ri/4);ctx.globalAlpha*=(1-ri*.2);ctx.stroke();}}
+  else{ctx.beginPath();ctx.ellipse(sx,sy+15*sc,ar,ar*.4,0,0,Math.PI*2);ctx.fillStyle=as.col;ctx.fill();}
+  ctx.globalAlpha=1;
+  // Proximity glow
+  const ms=matchScore(n),sr=GS.socR===1?2:GS.socR===3?4:3;
+  if(Math.hypot(PL.gx-n.gx,PL.gy-n.gy)<sr&&!n.bonded){if(ms.total>1){ctx.beginPath();ctx.arc(sx,sy-8,18+5*pulse,0,Math.PI*2);ctx.strokeStyle='rgba(255,136,204,.35)';ctx.lineWidth=1.2;ctx.stroke();}else if(ms.total<-1){ctx.beginPath();ctx.arc(sx,sy-8,16+4*pulse,0,Math.PI*2);ctx.strokeStyle='rgba(216,90,48,.28)';ctx.lineWidth=1;ctx.stroke();}}
+  // Body + walk anim
+  ctx.fillStyle=as.col;ctx.globalAlpha=nd;
+  const wb=as.shape==='spikes'?Math.abs(Math.sin(n.walkPhase))*4*sc:Math.sin(n.walkPhase)*1.5*sc;
+  ctx.beginPath();ctx.arc(sx,sy-18*sc,5*sc,0,Math.PI*2);ctx.fill();
+  ctx.fillRect(sx-4.5*sc,sy-13*sc,9*sc,16*sc);
+  ctx.fillRect(sx-5.5*sc,sy+3*sc,4*sc,9*sc+wb);
+  ctx.fillRect(sx+1.5*sc,sy+3*sc,4*sc,9*sc+wb);
+  ctx.globalAlpha=1;
+  // Tag
+  if(n.tagT>210){const tw=n.tag.length*5+10;ctx.globalAlpha=.88;ctx.fillStyle='rgba(2,2,10,.9)';if(ctx.roundRect)ctx.roundRect(sx-tw/2,sy-32,tw,11,3);else ctx.rect(sx-tw/2,sy-32,tw,11);ctx.fill();ctx.fillStyle=as.col;ctx.font=`700 6.5px 'Space Mono',monospace`;ctx.textAlign='center';ctx.fillText(n.tag,sx,sy-23.5);ctx.globalAlpha=1;}
+  if(n.react){const prg=Math.min((ts-n.reactT)/700,1);ctx.beginPath();ctx.arc(sx,sy-8,8+18*prg,0,Math.PI*2);ctx.strokeStyle=as.col;ctx.lineWidth=.8;ctx.globalAlpha=(1-prg)*.5;ctx.stroke();ctx.globalAlpha=1;if(prg>=1)n.react=false;}
+}
+
+function dPlayer(ts){
+  const p=s2w(PL.gx,PL.gy),sx=p.x,sy=p.y+T*.5-3,now=ts*.001;
+  const as=playerAura;
+  // Trail — path record, persists through buildings (the city can't erase your route)
+  PL.tr.push({x:sx,y:sy,a:.62,col:as.col});if(PL.tr.length>34)PL.tr.shift();
+  if(PL.tr.length>1){
+    ctx.beginPath();PL.tr.forEach((t,i)=>i===0?ctx.moveTo(t.x,t.y):ctx.lineTo(t.x,t.y));
+    ctx.strokeStyle=as.col;ctx.lineWidth=1.4;ctx.setLineDash([3,5]);
+    ctx.globalAlpha=.2;ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=1;
+  }
+  PL.tr.forEach((t,i)=>{
+    const prog=i/PL.tr.length;
+    const r=(as.shape==='echo'?2.8:1.9)*(0.4+0.6*prog);
+    ctx.beginPath();ctx.arc(t.x,t.y,r,0,Math.PI*2);
+    ctx.fillStyle=t.col;ctx.globalAlpha=t.a*prog*.55;ctx.fill();ctx.globalAlpha=1;
+    t.a*=.88;
+  });
+  // Player aura
+  if(!burnoutActive){
+    const ar=22+4*Math.sin(now*2);
+    ctx.globalAlpha=auraEnergy*.25;
+    if(as.shape==='spikes'){ctx.beginPath();for(let i=0;i<8;i++){const ang=(i/8)*Math.PI*2+now*.5;const r2=i%2===0?ar:ar*.5;i===0?ctx.moveTo(sx+r2*Math.cos(ang),sy+20+r2*Math.sin(ang)*.4):ctx.lineTo(sx+r2*Math.cos(ang),sy+20+r2*Math.sin(ang)*.4);}ctx.closePath();ctx.fillStyle=as.col;ctx.fill();}
+    else if(as.shape==='echo'){for(let ri=0;ri<3;ri++){ctx.beginPath();ctx.arc(sx,sy+20,ar-ri*5,0,Math.PI*2);ctx.strokeStyle=as.col;ctx.lineWidth=.8;ctx.globalAlpha=auraEnergy*.2*(1-ri/3);ctx.stroke();}}
+    else{ctx.beginPath();ctx.ellipse(sx,sy+20,ar,ar*.42,0,0,Math.PI*2);ctx.fillStyle=as.col;ctx.fill();}
+    ctx.globalAlpha=1;
+  }
+  // Body
+  const isMoving=K.w||K.a||K.s||K.d||PL.mv;
+  if(isMoving)PL.walkPhase+=.08;
+  const wb=Math.abs(Math.sin(PL.walkPhase))*4;
+  const pl=.92+.08*Math.sin(now*3);
+  ctx.fillStyle=as.col;ctx.beginPath();ctx.arc(sx,sy-22,8*pl,0,Math.PI*2);ctx.fill();
+  ctx.fillRect(sx-9,sy-14,18,22);ctx.fillRect(sx-10,sy+8,7,13+wb*.5);ctx.fillRect(sx+3,sy+8,7,13+wb*.5);
+  ctx.fillStyle='rgba(2,2,10,.9)';ctx.font=`700 7px 'Space Mono',monospace`;ctx.textAlign='center';ctx.fillText('YOU',sx,sy-34);
+  ctx.fillStyle=as.col;ctx.font=`700 6px 'Space Mono',monospace`;ctx.fillText(as.emoji+' '+as.name.toUpperCase(),sx,sy-26);
+  if(burnoutActive){ctx.fillStyle='#F09595';ctx.font=`700 6px 'Space Mono',monospace`;ctx.fillText('BURNOUT',sx,sy-26);}
+}
+
+function dRain(){if(weather!=='rain')return;ctx.strokeStyle='rgba(150,160,255,.18)';ctx.lineWidth=1;rainD.forEach(r=>{ctx.beginPath();ctx.moveTo(r.x,r.y);ctx.lineTo(r.x-1,r.y+8);ctx.globalAlpha=r.a;ctx.stroke();ctx.globalAlpha=1;r.y+=r.spd*2;r.x-=.5;if(r.y>CH){r.y=0;r.x=Math.random()*CW;}});}
+function dFog(dn){const al=weather==='fog'?.15:dn>.72||dn<.08?.1:0;if(al>0){ctx.fillStyle=`rgba(70,60,150,${al})`;ctx.fillRect(0,0,CW,CH);}}
+
+// ── Vibe Heatmap ───────────────────────────────────────────────────────────
+let heatmapActive=true;
+function toggleHeatmap(){
+  heatmapActive=!heatmapActive;
+  const btn=document.getElementById('vhbtn');
+  btn.textContent=heatmapActive?'ON':'OFF';
+  btn.classList.toggle('on',heatmapActive);
+}
+function dVibeHeatmap(){
+  if(!heatmapActive)return;
+  const now=performance.now();
+  npcs.forEach(n=>{
+    const p=s2w(n.gx,n.gy),cx=p.x,cy=p.y+T*.5,r=T*4;
+    const pulse=.65+.35*Math.sin(now*.0006+n.phase);
+    const col=n.auraState.col;
+    const grd=ctx.createRadialGradient(cx,cy,0,cx,cy,r*pulse);
+    grd.addColorStop(0,col+'2e');grd.addColorStop(.5,col+'14');grd.addColorStop(1,col+'00');
+    ctx.globalAlpha=.55;ctx.beginPath();ctx.arc(cx,cy,r*pulse,0,Math.PI*2);ctx.fillStyle=grd;ctx.fill();
+  });
+  ctx.globalAlpha=1;
+}
+
+// ── Resonance Clusters — pulsing ring when 3+ same-aura NPCs cluster ──────
+function dResonanceClusters(ts){
+  const seen=new Set();
+  npcs.forEach(anchor=>{
+    if(seen.has(anchor.id))return;
+    const cluster=npcs.filter(n=>n.auraState.id===anchor.auraState.id&&Math.hypot(n.gx-anchor.gx,n.gy-anchor.gy)<3.2);
+    if(cluster.length<3)return;
+    cluster.forEach(n=>seen.add(n.id));
+    const cgx=cluster.reduce((s,n)=>s+n.gx,0)/cluster.length;
+    const cgy=cluster.reduce((s,n)=>s+n.gy,0)/cluster.length;
+    const col=anchor.auraState.col;
+    const pp=s2w(cgx,cgy),r=24+cluster.length*6;
+    const pulse=.5+.5*Math.abs(Math.sin(ts*.0009+cgx));
+    ctx.beginPath();ctx.arc(pp.x,pp.y+T*.5,r,0,Math.PI*2);
+    ctx.strokeStyle=col;ctx.lineWidth=1.2;ctx.globalAlpha=pulse*.38;ctx.stroke();
+    ctx.globalAlpha=pulse*.05;ctx.fillStyle=col;ctx.fill();ctx.globalAlpha=1;
+    ctx.font=`700 6px 'Space Mono',monospace`;ctx.textAlign='center';
+    ctx.fillStyle=col;ctx.globalAlpha=pulse*.62;
+    ctx.fillText(anchor.auraState.name.toUpperCase()+' ×'+cluster.length,pp.x,pp.y+T*.5-r-5);
+    ctx.globalAlpha=1;
+  });
+}
+
+// ── Vibe Compass & City Mood Bars — DOM update ────────────────────────────
+let compassFrame=0;
+function updVibeCompass(){
+  compassFrame++;if(compassFrame%20!==0)return;
+  const dirs={n:[],s:[],e:[],w:[]};
+  npcs.forEach(n=>{
+    const dx=n.gx-PL.gx,dy=n.gy-PL.gy,dist=Math.hypot(dx,dy);
+    if(dist<0.5||dist>12)return;
+    if(Math.abs(dy)>Math.abs(dx)){if(dy<0)dirs.n.push(n.auraState);else dirs.s.push(n.auraState);}
+    else{if(dx>0)dirs.e.push(n.auraState);else dirs.w.push(n.auraState);}
+  });
+  const arrows={n:'↑',s:'↓',e:'→',w:'←'};
+  ['n','s','e','w'].forEach(id=>{
+    const el=document.getElementById('vc-'+id);if(!el)return;
+    const arr=dirs[id];
+    if(!arr.length){el.innerHTML='·';el.style.background='rgba(255,255,255,.025)';el.style.color='rgba(175,169,236,.15)';el.style.borderColor='rgba(83,74,183,.1)';return;}
+    const c={};arr.forEach(a=>{c[a.id]=(c[a.id]||0)+1;});
+    const top=Object.entries(c).sort((a,b)=>b[1]-a[1])[0];
+    const as=AURA_STATES.find(a=>a.id===top[0]);if(!as)return;
+    el.innerHTML=`<span class="vca">${arrows[id]}</span><span class="vcl">${as.name.slice(0,3).toUpperCase()}</span>`;
+    el.style.background=as.col+'14';el.style.color=as.col;el.style.borderColor=as.col+'2e';
+  });
+  // City mood distribution bars
+  const ec={};npcs.forEach(n=>{ec[n.auraState.id]=(ec[n.auraState.id]||0)+1;});
+  const tn=npcs.length||1;
+  const vd=AURA_STATES.map(a=>({...a,pct:Math.round(((ec[a.id]||0)/tn)*100)})).filter(a=>a.pct>0).sort((a,b)=>b.pct-a.pct).slice(0,4);
+  const lbl=document.getElementById('city-mood-lbl');
+  const bars=document.getElementById('city-mood-bars');
+  if(vd.length>0&&lbl&&bars){
+    lbl.style.display='block';
+    bars.innerHTML=vd.map(a=>`<div class="vmrow"><span class="vmn" style="color:${a.col}">${a.name.slice(0,3).toUpperCase()}</span><div class="vmbar"><div class="vmfill" style="width:${a.pct}%;background:${a.col}"></div></div><span class="vmp">${a.pct}%</span></div>`).join('');
+  }
+}
+
+// Particles
+function addRings(sx,sy,col,n){for(let i=0;i<(n||2);i++)rings.push({x:sx,y:sy,r:4+i*7,mR:55+i*12,a:.7,col,sp:1.4+Math.random()*.5});}
+function addSparks(sx,sy,col){for(let i=0;i<5;i++)sparks.push({x:sx,y:sy,vx:(Math.random()-.5)*2,vy:-Math.random()*2-.4,a:.9,r:1+Math.random()*1.5,col});}
+function addFloat(sx,sy,txt,col){floats.push({x:sx,y:sy,txt,col,a:1,vy:-.7,life:110});}
+function pushFeed(txt){const ef=document.getElementById('efeed');const d=document.createElement('div');d.className='ei';d.textContent=txt;ef.prepend(d);setTimeout(()=>d.remove(),3500);while(ef.children.length>6)ef.lastChild.remove();}
+
+// ═══════════════════════════════════════════════════
+// RESONANCE & BURNOUT
+// ═══════════════════════════════════════════════════
+function checkResonance(){
+  if(resCool>0||encOpen||burnoutActive)return;
+  const sr=GS.socR===1?2:GS.socR===3?4:3;
+  const compat=npcs.filter(n=>{if(n.bonded||Math.hypot(PL.gx-n.gx,PL.gy-n.gy)>sr)return false;return playerAura.resonates.includes(n.auraState.id)&&!GS.bonds.find(b=>b.id===n.id);});
+  if(compat.length>0&&Math.random()>.97){
+    const npc=compat[Math.floor(Math.random()*compat.length)];
+    resCool=300;GS.resonances++;document.getElementById('hres').textContent=GS.resonances;
+    auraEnergy=Math.min(1,auraEnergy+.15);
+    document.getElementById('rf-nm').textContent=playerAura.emoji+' YOU ↔ '+npc.auraState.emoji+' '+npc.name.toUpperCase();
+    document.getElementById('rf-sub').textContent=playerAura.name+' resonates with '+npc.auraState.name;
+    const rf=document.getElementById('res-flash');rf.style.display='block';setTimeout(()=>rf.style.display='none',2200);
+    const pp=s2w(npc.gx,npc.gy);addRings(pp.x,pp.y+T*.5,'#FF88CC',4);addSparks(pp.x,pp.y+T*.5,'#FF88CC');addFloat(pp.x,pp.y+T*.5-20,'VIBE MATCH','#FF88CC');
+    pushFeed('Vibe match: '+playerAura.name+' ↔ '+npc.auraState.name);
+    setTimeout(()=>{if(!encOpen)clickNPC(npc);},2300);
+  }
+}
+function tickBurnout(dt){
+  if(burnoutActive){burnoutCool-=dt;if(burnoutCool<=0){burnoutActive=false;auraEnergy=.3+burnoutShield*.5;pushFeed('Aura restored.');}return;}
+  const nearN=npcs.filter(n=>Math.hypot(PL.gx-n.gx,PL.gy-n.gy)<2).length;
+  if(nearN>3&&!K.w&&!K.a&&!K.s&&!K.d){const rate=playerAura.burnout*(1-burnoutShield)*.0005;auraEnergy=Math.max(0,auraEnergy-rate*dt);if(auraEnergy<=0){burnoutActive=true;burnoutCool=8000;pushFeed('Social burnout. Step away.');}}
+  else if(nearN===0){const rc=playerAura.id==='reflective'||playerAura.id==='memory_keeper'?.001:.0004;auraEnergy=Math.min(1,auraEnergy+rc*dt);}
+  auraEnergy=Math.max(0,auraEnergy-.00005*dt);
+}
+
+// ═══════════════════════════════════════════════════
+// ENCOUNTER
+// ═══════════════════════════════════════════════════
+function openZone(sc){
+  if(encOpen)return;encOpen=true;
+  const vis=GS.visitCount[sc.id]||0;
+  document.getElementById('eey').textContent='ZONE ENCOUNTER';document.getElementById('edot').style.background=sc.col;document.getElementById('etitle').textContent=sc.loc;
+  const mem=document.getElementById('emem');if(vis>0){mem.style.display='block';mem.textContent=sc.mem;}else mem.style.display='none';
+  document.getElementById('ebody').innerHTML=sc.story;
+  const ex=document.getElementById('eextra');ex.innerHTML='';
+  const st=document.createElement('div');st.className='esec';st.textContent='YOUR RESPONSE';ex.appendChild(st);
+  const cg=document.createElement('div');cg.className='cg';
+  sc.choices.forEach(ch=>{const d=document.createElement('div');d.className='cc';let cost=[];if(ch.l!==0)cost.push((ch.l>0?'+':'')+ch.l+' leg');if(ch.p!==0)cost.push((ch.p>0?'+':'')+ch.p+' prs');d.innerHTML=`<span class="cb2">${ch.b}</span><span class="ct2">${ch.t}</span><div class="cco">${cost.join(' · ')}</div>`;d.onclick=()=>doChoice(sc,ch,d);cg.appendChild(d);});
+  ex.appendChild(cg);document.getElementById('eres').classList.remove('on');buildProg(sc);
+  document.getElementById('enc').classList.add('on');
+  const pp=s2w(sc.gx,sc.gy);addRings(pp.x,pp.y+T*.5-sc.h*16,sc.col,3);addSparks(pp.x,pp.y+T*.5-sc.h*16,sc.col);
+  pushFeed('Entered: '+sc.label);
+}
+function doChoice(sc,ch,btn){
+  GS.comply+=ch.dc;GS.refuse+=ch.dr;GS.subvert+=ch.ds;GS.leg=Math.max(0,Math.min(100,GS.leg+ch.l));GS.prs=Math.max(0,Math.min(100,GS.prs+ch.p));
+  GS.visited.add(sc.id);GS.visitCount[sc.id]=(GS.visitCount[sc.id]||0)+1;
+  document.querySelectorAll('.cc').forEach(b=>b.classList.add('lk'));btn.classList.add('ch');btn.classList.remove('lk');
+  const res=document.getElementById('eres');res.textContent=ch.c;res.className='eres on '+ch.y;
+  npcs.filter(n=>Math.hypot(n.gx-sc.gx,n.gy-sc.gy)<3).slice(0,3).forEach(n=>{n.react=true;n.reactT=performance.now();});
+  const pp=s2w(sc.gx,sc.gy);addRings(pp.x,pp.y+T*.5-sc.h*16,sc.col,ch.y==='b'?4:2);addFloat(pp.x,pp.y+T*.5-sc.h*16-20,ch.b,ch.y==='b'?'#F09595':ch.y==='g'?'#9FE1CB':'#AFA9EC');
+  pushFeed(sc.label+': '+ch.b);updHUD();buildProg(sc);
+  if(GS.visited.size>=SCENES.length&&!GS.gameOver)setTimeout(()=>{closeEnc();endGame();},2400);
+}
+function clickNPC(n){
+  if(encOpen||GS.gameOver)return;encOpen=true;
+  const ms=matchScore(n),isM=ms.mutual>0&&ms.clash===0,isC=ms.total<0;
+  const isVR=playerAura.resonates.includes(n.auraState.id),isVP=playerAura.repels.includes(n.auraState.id);
+  let encT='PROXIMITY';if(isVR&&isM)encT='VIBE MATCH · RESONANCE';else if(isVR)encT='VIBE MATCH · AURA COMPATIBLE';else if(isVP||isC)encT='AURA FRICTION';
+  document.getElementById('eey').textContent='NPC ENCOUNTER · '+encT;
+  document.getElementById('edot').style.background=n.auraState.col;
+  document.getElementById('etitle').textContent=n.name.toUpperCase()+' · '+n.auraState.emoji+' '+n.auraState.name.toUpperCase();
+  document.getElementById('emem').style.display='none';
+  let body=`${n.name} projects a <em>${n.auraState.name}</em> aura. Interests: ${n.ints.map(i=>`<em>${i}</em>`).join(', ')}. Protocol: <b>${n.protocol}</b>.`;
+  if(isVR)body+=` <b>Your auras resonate. A Vibe Match is possible.</b>`;
+  else if(isVP)body+=` <b>Your auras repel. The space registers tension.</b>`;
+  document.getElementById('ebody').innerHTML=body;
+  const ex=document.getElementById('eextra');ex.innerHTML='';
+  const st=document.createElement('div');st.className='esec';st.textContent='HOW DO YOU ENGAGE?';ex.appendChild(st);
+  const ag=document.createElement('div');ag.className='ag';
+  const acts=isVR?[NPC_ACTS[0],NPC_ACTS[1],NPC_ACTS[2],NPC_ACTS[3]]:isVP||isC?[NPC_ACTS[4],NPC_ACTS[5],NPC_ACTS[3],NPC_ACTS[1]]:[NPC_ACTS[1],NPC_ACTS[3],NPC_ACTS[0],NPC_ACTS[4]];
+  acts.forEach(act=>{
+    const bc=act.e==='c'?'rgba(93,202,165,.22)':act.e==='r'?'rgba(216,90,48,.22)':'rgba(83,74,183,.18)';
+    const ic=act.e==='c'?'rgba(93,202,165,.1)':act.e==='r'?'rgba(216,90,48,.1)':'rgba(83,74,183,.08)';
+    const tc=act.e==='c'?'#5DCAA5':act.e==='r'?'#D85A30':'#AFA9EC';
+    const d=document.createElement('div');d.className='ac2';d.style.borderColor=bc;
+    d.innerHTML=`<div class="aic" style="background:${ic};color:${tc};">${act.l.slice(0,2)}</div><div><span class="atn" style="color:${tc}">${act.t}</span><div class="adc">${act.d}</div><span class="atg" style="background:${ic};color:${tc};">${act.cost}</span></div>`;
+    d.onclick=()=>{
+      document.querySelectorAll('.ac2').forEach(b=>{b.style.pointerEvents='none';b.style.opacity='.2';});
+      if(act.id==='ritual'){showRituals(n);return;}
+      if(act.e==='c'){GS.prs=Math.max(0,GS.prs-5);addBond(n,'mutual');}else if(act.e==='r'){GS.subvert++;addBond(n,'clash');}
+      const res=document.getElementById('eres');
+      let msg='',cls='w';
+      if(act.e==='c'){msg=`Bond formed with ${n.name}. ${playerAura.name} + ${n.auraState.name} logged as resonant pair.`;cls='r';}
+      else if(act.e==='r'){msg=`Divergence logged. Your aura friction with ${n.name} is public data.`;cls='b';}
+      else{msg=`A nod. The protocol logs "brief proximity event."`;cls='w';}
+      res.textContent=msg;res.className='eres on '+cls;
+      n.react=true;n.reactT=performance.now();auraEnergy=Math.max(0,auraEnergy-.1);nearCool=150;updHUD();updBonds();
+    };
+    ag.appendChild(d);
+  });
+  ex.appendChild(ag);document.getElementById('eres').classList.remove('on');buildProg(null);
+  document.getElementById('enc').classList.add('on');
+  const pp=s2w(n.gx,n.gy);addRings(pp.x,pp.y+T*.5,n.auraState.col,2);pushFeed('Nearby: '+n.name+' ['+n.auraState.emoji+' '+n.auraState.name+']');
+}
+function showRituals(n){
+  const ex=document.getElementById('eextra');const rs=document.createElement('div');rs.className='esec';rs.textContent='CHOOSE A RITUAL';ex.appendChild(rs);
+  const rg=document.createElement('div');rg.className='rg';
+  RITUALS.forEach(rit=>{const b=document.createElement('div');b.className='rb';b.innerHTML=`<span class="rn">${rit.n}</span><div class="rd">${rit.d}</div><div class="rc">${rit.e}</div>`;b.onclick=()=>{rit.fn();GS.rituals.push(rit.id);addBond(n,'mutual');const pp=s2w(n.gx,n.gy);addRings(pp.x,pp.y+T*.5,'#7F77DD',4);addSparks(pp.x,pp.y+T*.5,'#7F77DD');addFloat(pp.x,pp.y+T*.5-25,rit.n,'#AFA9EC');pushFeed('Ritual: '+rit.n);document.getElementById('eres').textContent=`Ritual "${rit.n}" with ${n.name}. ${rit.e}. For a moment, neither of you existed in the protocol.`;document.getElementById('eres').className='eres on g';updHUD();nearCool=120;};rg.appendChild(b);});
+  ex.appendChild(rg);
+}
+function addBond(n,type){if(!GS.bonds.find(b=>b.id===n.id)){GS.bonds.push({id:n.id,name:n.name,col:n.auraState.col,aura:n.auraState.name,type});n.bonded=true;n.bondWith='player';n.bondType=type;document.getElementById('hb').textContent=GS.bonds.length;updBonds();}}
+function updBonds(){const bl=document.getElementById('bl');bl.innerHTML='';GS.bonds.slice(-5).forEach(b=>{const d=document.createElement('div');d.className='brow';d.innerHTML=`<div class="bd" style="background:${b.col}"></div><span class="bn">${b.name} [${b.aura||''}]</span><span class="bt ${b.type==='mutual'?'m':'c'}">${b.type==='mutual'?'resonant':'friction'}</span>`;bl.appendChild(d);});}
+function buildProg(active){const pr=document.getElementById('eprog');pr.innerHTML='';SCENES.forEach(s=>{const d=document.createElement('div');d.className='epd'+(GS.visited.has(s.id)?' v':active&&s.id===active.id?' a':'');pr.appendChild(d);});}
+function closeEnc(){document.getElementById('enc').classList.remove('on');encOpen=false;nearCool=120;}
+
+// ═══════════════════════════════════════════════════
+// HUD
+// ═══════════════════════════════════════════════════
+function updAuraHUD(){
+  const a=playerAura;
+  document.getElementById('pa-dot').style.background=a.col;
+  document.getElementById('pa-nm').textContent=a.emoji+' '+a.name.toUpperCase();
+  document.getElementById('pa-nm').style.color=a.col;
+  document.getElementById('pa-fill').style.background=a.col;
+  document.getElementById('pa-fill').style.width=Math.round(auraEnergy*100)+'%';
+}
+function updHUD(){
+  document.getElementById('hp2').textContent=Math.round(GS.prs)+'%';document.getElementById('hl').textContent=Math.round(GS.leg)+'%';document.getElementById('hz').textContent=GS.visited.size+'/5';document.getElementById('hb').textContent=GS.bonds.length;document.getElementById('hres').textContent=GS.resonances||0;
+  const{comply:c,refuse:r,subvert:s}=GS,mx=Math.max(c,r,s,1);
+  ['c','r','s'].forEach((k,i)=>{const v=[c,r,s][i];document.getElementById('sb'+k).style.width=Math.round(v/mx*100)+'%';document.getElementById('at'+k).style.width=Math.round(v/mx*100)+'%';document.getElementById('as'+k).textContent=v;});
+  const total=c+r+s||1;let nm,cl;
+  if(s/total>.45){nm='THE GLITCH';cl='#5DCAA5';}else if(c/total>.5){nm='THE LEGIBLE ONE';cl='#AFA9EC';}else if(r/total>.45){nm='THE GHOST';cl='#F09595';}else if(total<=1){nm='THE WANDERER';cl='rgba(175,169,236,.5)';}else{nm='THE NEGOTIATOR';cl='#FAC775';}
+  document.getElementById('anm').textContent=nm;document.getElementById('anm').style.color=cl;
+  const tp=dayMinutes/1440;let tc='#534AB7';if(tp<.25)tc='#3C3489';else if(tp<.5)tc='#5DCAA5';else if(tp<.75)tc='#BA7517';else tc='#534AB7';
+  document.getElementById('tfill').style.width=(tp*100)+'%';document.getElementById('tfill').style.background=tc;
+  document.getElementById('htime').textContent=timeStr(dayMinutes);
+  updAuraHUD();
+}
+
+// ═══════════════════════════════════════════════════
+// END GAME
+// ═══════════════════════════════════════════════════
+const ARCHS={glitch:{n:'THE GLITCH',c:'#5DCAA5',s:'You found the cracks.',m:'You participated on your own terms — made the system briefly contain things it wasn\'t designed for. Glitches are temporary. But they\'re the only proof a system has limits.'},legible:{n:'THE LEGIBLE ONE',c:'#AFA9EC',s:'The system always knew where you were.',m:'You stayed visible throughout. The system made space for you. What you gave up was the right to be unread.'},ghost:{n:'THE GHOST',c:'#F09595',s:'Your absence was its own signal.',m:'You refused consistently. Your gap became visible — the most conspicuous presence in a city of legible people.'},neg:{n:'THE NEGOTIATOR',c:'#FAC775',s:'Honest, exhausting, human.',m:'You moved between positions. The system is not one thing and neither are you.'}};
+function endGame(){
+  GS.gameOver=true;const{comply:c,refuse:r,subvert:s}=GS,total=c+r+s||1;
+  let arch;if(s/total>.45)arch=ARCHS.glitch;else if(c/total>.5)arch=ARCHS.legible;else if(r/total>.45)arch=ARCHS.ghost;else arch=ARCHS.neg;
+  document.getElementById('eaarch').textContent=arch.n;document.getElementById('eaarch').style.color=arch.c;document.getElementById('easub').textContent=arch.s;
+  const mut=GS.bonds.filter(b=>b.type==='mutual').length,cla=GS.bonds.filter(b=>b.type!=='mutual').length;
+  document.getElementById('eagrid').innerHTML=[`<div class="est"><span class="esn" style="color:#AFA9EC">${c}</span><span class="esl">complied</span></div>`,`<div class="est"><span class="esn" style="color:#F09595">${r}</span><span class="esl">refused</span></div>`,`<div class="est"><span class="esn" style="color:#5DCAA5">${s}</span><span class="esl">subverted</span></div>`,`<div class="est"><span class="esn" style="color:#FF88CC">${GS.resonances||0}</span><span class="esl">vibes</span></div>`,`<div class="est"><span class="esn" style="color:#5DCAA5">${mut}</span><span class="esl">bonds</span></div>`,`<div class="est"><span class="esn" style="color:#D85A30">${cla}</span><span class="esl">clashes</span></div>`,`<div class="est"><span class="esn" style="color:#7F77DD">${GS.rituals.length}</span><span class="esl">rituals</span></div>`].join('');
+  if(GS.bonds.length>0){const bw=document.getElementById('ebondwrap');bw.style.display='block';const bl=document.getElementById('eblist');bl.innerHTML='';GS.bonds.forEach(b=>{const d=document.createElement('div');d.className='ebr';d.innerHTML=`<div class="ebd" style="background:${b.col}"></div><span class="ebn" style="color:${b.type==='mutual'?'#5DCAA5':'#D85A30'}">${b.name} [${b.aura||''}]</span><span class="ebtp ${b.type==='mutual'?'m':'r'}">${b.type==='mutual'?'resonant':'friction'}</span>`;bl.appendChild(d);});}
+  let msg=arch.m;if(mut>0)msg+=` You formed ${mut} resonant bond${mut>1?'s':''} — auras whose signal aligned inside a city designed to keep you strangers.`;if(GS.resonances>0)msg+=` ${GS.resonances} Vibe Match${GS.resonances>1?'es':''} — moments the city identified compatible frequencies.`;if(GS.rituals.length>0)msg+=` ${GS.rituals.length} ritual${GS.rituals.length>1?'s':''} — acts the protocol had no category for.`;
+  document.getElementById('eamsg').textContent=msg;
+  showScr('scr-end',arch.n,arch.s,'SESSION COMPLETE');
+}
+
+// ═══════════════════════════════════════════════════
+// MAIN LOOP
+// ═══════════════════════════════════════════════════
+let lastT=0;
+function loop(ts){
+  requestAnimationFrame(loop);const dt=Math.min(ts-lastT,50);lastT=ts;
+  if(curScr!=='scr-game')return;
+  dayMinutes=(dayMinutes+dt*(GS.simSpd/4)*.0004*20)%1440;const dn=dayMinutes/1440;
+  DAY_EVENTS.forEach(ev=>{if(!firedEvs.has(ev.id)&&dayMinutes>=ev.t&&dayMinutes<ev.t+5){firedEvs.add(ev.id);pushFeed(ev.msg);}});
+  if(dayMinutes<5&&firedEvs.size>0)firedEvs.clear();
+  wTimer+=dt;if(wTimer>wNext){wTimer=0;wNext=8000+Math.random()*15000;const wl=WEATHERS.filter(w=>w!==weather);weather=wl[Math.floor(Math.random()*wl.length)];if(weather==='rain')initRain();}
+  if(!encOpen){
+    const spd=GS.simSpd*.007;
+    if(K.w){PL.gx-=spd;PL.gy-=spd;}if(K.s){PL.gx+=spd;PL.gy+=spd;}if(K.a){PL.gx-=spd;PL.gy+=spd;}if(K.d){PL.gx+=spd;PL.gy-=spd;}
+    if(PL.mv){const dx=PL.tx-PL.gx,dy=PL.ty-PL.gy,d2=Math.hypot(dx,dy);if(d2<.15){PL.gx=PL.tx;PL.gy=PL.ty;PL.mv=false;}else{PL.gx+=dx*.1*(GS.simSpd/5);PL.gy+=dy*.1*(GS.simSpd/5);}}
+    PL.gx=Math.max(-9,Math.min(10,PL.gx));PL.gy=Math.max(-6,Math.min(10,PL.gy));
+    tickBurnout(dt);if(resCool>0)resCool--;else checkResonance();
+    if(nearCool>0){nearCool--;}else{for(const sc of SCENES){if(GS.visited.has(sc.id)||GS.gameOver)continue;if(Math.hypot(PL.gx-sc.gx,PL.gy-sc.gy)<1.6&&lastNear!==sc.id){lastNear=sc.id;nearCool=200;openZone(sc);break;}}}
+  }
+  npcs.forEach(n=>tickNPC(n,dt));
+  const tx=CW/2-s2w(PL.gx,PL.gy).x,ty=CH*.4-s2w(PL.gx,PL.gy).y;
+  camX+=(tx-camX)*.08;camY+=(ty-camY)*.08;
+  ctx.clearRect(0,0,CW,CH);
+  const sky=skyGrad(dn);const grd=ctx.createLinearGradient(0,0,0,CH);grd.addColorStop(0,sky[0]);grd.addColorStop(1,sky[1]);ctx.fillStyle=grd;ctx.fillRect(0,0,CW,CH);
+  ctx.save();ctx.translate(camX,camY);
+  [...GND].sort((a,b)=>(a.gx+a.gy)-(b.gx+b.gy)).forEach(t=>{if(!t.bk)dGnd(t.gx,t.gy,dn,null);});
+  dVibeHeatmap();
+  // Ghost buildings that are depth-forward of the player so your presence is never hidden
+  [...BLDGS].sort((a,b)=>(a.gx+a.gy)-(b.gx+b.gy)).forEach(b=>{
+    const ghost=(b.gx+b.gy)>(PL.gx+PL.gy+.8)&&Math.hypot(b.gx-PL.gx,b.gy-PL.gy)<3.5;
+    dTile(b.gx,b.gy,b.t,b.s,b.d,b.h,b.type,ghost?.28:1);
+  });
+  [...SCENES].sort((a,b)=>(a.gx+a.gy)-(b.gx+b.gy)).forEach(sc=>dScene(sc,ts,dn));
+  dResonanceClusters(ts);
+  const objs=[...npcs.map(n=>({...n,_pl:false})),{gx:PL.gx,gy:PL.gy,_pl:true}];
+  objs.sort((a,b)=>(a.gx+a.gy)-(b.gx+b.gy)).forEach(o=>{if(o._pl)dPlayer(ts);else dNPC(o,ts,dn);});
+  rings=rings.filter(rg=>{rg.r+=rg.sp;rg.a-=.017;if(rg.a<=0||rg.r>=rg.mR)return false;ctx.beginPath();ctx.arc(rg.x,rg.y,rg.r,0,Math.PI*2);ctx.strokeStyle=rg.col;ctx.lineWidth=.8;ctx.globalAlpha=rg.a;ctx.stroke();ctx.globalAlpha=1;return true;});
+  sparks=sparks.filter(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.07;p.a-=.03;if(p.a<=0)return false;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=p.col;ctx.globalAlpha=p.a;ctx.fill();ctx.globalAlpha=1;return true;});
+  floats=floats.filter(f=>{f.y+=f.vy;f.a-=.013;f.life--;if(f.a<=0||f.life<=0)return false;ctx.font=`700 8px 'Space Mono',monospace`;ctx.textAlign='center';ctx.fillStyle=f.col;ctx.globalAlpha=f.a;ctx.fillText(f.txt,f.x,f.y);ctx.globalAlpha=1;return true;});
+  if(Math.random()>.993){const sc=SCENES[Math.floor(Math.random()*SCENES.length)];if(!GS.visited.has(sc.id)){const pp=s2w(sc.gx,sc.gy);addRings(pp.x,pp.y+T*.5-sc.h*16,sc.col,1);}}
+  npcs.forEach(n=>{n.gx+=n.vx;n.gy+=n.vy;if(Math.abs(n.gx)>9||Math.abs(n.gy)>9){n.gx=Math.max(-8,Math.min(9,n.gx));n.gy=Math.max(-6,Math.min(9,n.gy));n.tx=(Math.random()-.5)*8;n.ty=(Math.random()-.5)*7;}});
+  ctx.restore();
+  dRain();dFog(dn);updHUD();updVibeCompass();
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
