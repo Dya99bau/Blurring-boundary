@@ -1,11 +1,12 @@
 import { useState, useRef } from 'react';
 import IntroScreen from './screens/IntroScreen';
+import MapScreen from './screens/MapScreen';
 import PlayerSelectScreen from './screens/PlayerSelectScreen';
 import GameScreen from './screens/GameScreen';
 import EndScreen from './screens/EndScreen';
 
 export default function App() {
-  const [screen, setScreen] = useState('intro'); // 'intro' | 'playerSelect' | 'game' | 'end'
+  const [screen, setScreen] = useState('intro'); // 'intro' | 'map' | 'playerSelect' | 'game' | 'end'
   const [veilOn, setVeilOn] = useState(false);
   const [titleData, setTitleData] = useState(null); // { title, sub, eye } | null
   const [config, setConfig] = useState(null);
@@ -31,6 +32,11 @@ export default function App() {
   function handleStart(cfg) {
     setConfig(cfg);
     setEndData(null);
+    showScreen('map', 'Neo-Venezia', 'Choose your district.', 'MAP');
+  }
+
+  function handleMapSelect(district) {
+    setConfig(prev => ({ ...prev, district }));
     showScreen('playerSelect', 'Neo-Venezia', 'Choose your presence.', 'IDENTITY');
   }
 
@@ -55,6 +61,8 @@ export default function App() {
   return (
     <div id="app">
       <IntroScreen visible={screen === 'intro'} onStart={handleStart} />
+
+      <MapScreen visible={screen === 'map'} onSelect={handleMapSelect} />
 
       <PlayerSelectScreen visible={screen === 'playerSelect'} onSelect={handlePlayerSelect} />
 

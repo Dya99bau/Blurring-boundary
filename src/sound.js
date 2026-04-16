@@ -6,6 +6,7 @@ let ctx = null;
 let masterGain = null;
 let ambientNode = null;
 let ambientGain = null;
+let envAmbLpf = null; // reference to ambient LPF for empathy shaping
 let footStepTime = 0;
 
 export function initSound() {
@@ -87,6 +88,7 @@ function startCanalAmbience() {
   ambientGain = ctx.createGain();
   ambientGain.gain.value = 0.06;
 
+  envAmbLpf = lpf; // store reference for setEnvEmpathy
   ambientNode.connect(lpf);
   lpf.connect(ambientGain);
   ambientGain.connect(masterGain);
@@ -220,4 +222,33 @@ export function playNightFall() {
 // ── Set canal ambience volume (louder near canal) ─────────────────────────────
 export function setCanalVolume(v) {
   if (ambientGain) ambientGain.gain.setTargetAtTime(Math.max(0.02, v * 0.14), ctx.currentTime, 0.8);
+}
+
+// ── Environmental Empathy — shapes ambient sound to match world state ─────────
+// contracted (emp≈0): muffled, bass-heavy (160 Hz LPF)
+// neutral (emp≈0.5): normal (320 Hz)
+// bloomed (emp≈1): bright, melodic (700 Hz)
+export function setEnvEmpathy(emp) {
+  if (!ctx || !envAmbLpf) return;
+  envAmbLpf.frequency.setTargetAtTime(160 + emp * 540, ctx.currentTime, 1.8);
+}
+
+// ── Bloom tone — ascending arpeggio when city enters bloomed state ─────────────
+export function playBloomTone() {
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  [0, 0.18, 0.38, 0.60].forEach((d, i) => {
+    const f = 261.63 * [1, 1.26, 1.5, 2][i];
+    osc('sine', f, now + d, 1.8 - d * 0.2, 0.028);
+  });
+  noise(0.4, 0.01, 2400);
+}
+
+// ── Contract tone — descending heaviness when city enters contracted state ──────
+export function playContractTone() {
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  osc('sine', 110, now, 2.2, 0.03);
+  osc('triangle', 82, now + 0.2, 1.8, 0.022);
+  noise(0.3, 0.012, 180);
 }

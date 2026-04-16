@@ -73,20 +73,58 @@ export const SCENES = [
    ]},
 ];
 
-// Bldg colors follow Bio-Digital Baroque district palette:
-// San Marco (center): warm limestone  Arsenale (east gx≥3): cool industrial
-// Cannaregio (west/north): mossy warm  Dorsoduro (south gy≥5): dark lagoon
+// Bldg colors — visible Venice stone palette per district.
+// t=top face, s=right face (lighter), d=left face (shadow)
 export const BLDGS = [
-  {gx:-3,gy:-2,h:5,t:'#1e1c18',s:'#141210',d:'#0f0e0c'}, // Cannaregio: warm stone tower
-  {gx:1,gy:-4,h:7,t:'#181e24',s:'#10141a',d:'#0c1014'}, // North canal: tall blue-grey
-  {gx:6,gy:0,h:3,t:'#161c1e',s:'#0f1315',d:'#0b0f10'}, // Arsenale: industrial slate
-  {gx:-5,gy:3,h:4,t:'#1c1a14',s:'#13110e',d:'#0e0c09'}, // Cannaregio: moss-amber
-  {gx:2,gy:7,h:3,t:'#0c1418',s:'#080f12',d:'#060b0e'}, // Dorsoduro: lagoon-dark
-  {gx:-3,gy:6,h:2,t:'#0e1418',s:'#09101a',d:'#060c10'}, // Dorsoduro: sunken ruin
-  {gx:7,gy:-2,h:5,t:'#141a1c',s:'#0e1214',d:'#0a0e10'}, // Arsenale: tall foundry
-  {gx:-6,gy:5,h:3,t:'#181c14',s:'#10140e',d:'#0c100a'}, // Far-west: overgrown
-  {gx:3,gy:-3,h:4,t:'#16181e',s:'#0f1016',d:'#0b0c12'}, // Arsenale: tech block
-  {gx:-2,gy:4,h:3,t:'#141816',s:'#0e1110',d:'#090c0b'}, // San Marco edge: neutral
+  // San Marco / center — warm Istrian limestone
+  {gx:-1,gy:1, h:4,t:'#4a3e2c',s:'#5c4e38',d:'#332b1e'}, // Palazzo central
+  {gx:3,gy:1, h:3,t:'#3e3828',s:'#4c4530',d:'#2a251a'}, // San Marco wing
+  {gx:-2,gy:3, h:3,t:'#453c2a',s:'#564b34',d:'#2e281c'}, // South plaza
+  {gx:-2,gy:1, h:5,t:'#4a3c28',s:'#5c4c32',d:'#32281a'}, // West alley face (tall)
+  {gx:0, gy:2, h:4,t:'#3e3424',s:'#4c4030',d:'#2a2418'}, // Calle connector
+  {gx:-1,gy:-1,h:4,t:'#453c2c',s:'#564a38',d:'#2e281e'}, // North end
+  {gx:0, gy:-1,h:3,t:'#3c3222',s:'#4a3e2c',d:'#28221a'}, // Canal-side north
+  {gx:0, gy:3, h:3,t:'#3a3020',s:'#483c28',d:'#261e14'}, // South calle
+  {gx:3, gy:0, h:4,t:'#3e3828',s:'#4c4530',d:'#2a2518'}, // East calle north
+  {gx:3, gy:2, h:4,t:'#3a3424',s:'#483e30',d:'#28231a'}, // East calle south
+
+  // Cannaregio — moss-warm ochre, narrow streets
+  {gx:-3,gy:-2,h:5,t:'#4a3e1e',s:'#5a4c26',d:'#332b14'}, // Tall Cannaregio tower
+  {gx:-5,gy:3, h:4,t:'#3e3820',s:'#4c4528',d:'#2a2515'}, // Cannaregio palazzo
+  {gx:-4,gy:0, h:3,t:'#423618',s:'#524422',d:'#2c2410'}, // North alley block
+  {gx:-6,gy:2, h:2,t:'#382e14',s:'#463a1c',d:'#261e0d'}, // Low fondamenta
+  {gx:-2,gy:-1,h:4,t:'#4a3e1c',s:'#5a4c24',d:'#332b12'}, // Calle entrance
+  {gx:-3,gy:0, h:5,t:'#483c1c',s:'#584a24',d:'#312912'}, // Tall alley wall
+  {gx:-3,gy:3, h:4,t:'#3e3218',s:'#4c3e20',d:'#2a2210'}, // South Cannaregio
+  {gx:-4,gy:-3,h:4,t:'#423818',s:'#524620',d:'#2c2610'}, // North quarter
+  {gx:-5,gy:-1,h:3,t:'#3c3216',s:'#4a3e1e',d:'#28220e'}, // West alley
+  {gx:-5,gy:1, h:4,t:'#403618',s:'#4e4220',d:'#2a2410'}, // Canal parallel
+  {gx:-6,gy:0, h:3,t:'#3a2e12',s:'#463a1a',d:'#261e0a'}, // Far west
+  {gx:-6,gy:4, h:2,t:'#362a10',s:'#423418',d:'#221a08'}, // Low west block
+
+  // Arsenale — cool blue-grey slate, dock compound
+  {gx:6, gy:0, h:3,t:'#2c3840',s:'#38464e',d:'#1e262c'}, // Arsenale workshop
+  {gx:7, gy:-2,h:6,t:'#283040',s:'#333c4e',d:'#1c2230'}, // Tall foundry campanile
+  {gx:5, gy:2, h:4,t:'#243038',s:'#2e3c46',d:'#182028'}, // Arsenal dock block
+  {gx:3, gy:-3,h:4,t:'#2a3440',s:'#36404c',d:'#1c2430'}, // Arsenale tech block
+  {gx:8, gy:1, h:2,t:'#222c34',s:'#2c3840',d:'#161e24'}, // Low guard house
+  {gx:4, gy:-1,h:4,t:'#263240',s:'#323e4c',d:'#1a222c'}, // Dock north wall
+  {gx:4, gy:1, h:3,t:'#243040',s:'#2e3c4c',d:'#181e28'}, // Dock south wall
+  {gx:4, gy:3, h:3,t:'#22303e',s:'#2c3c4a',d:'#161e28'}, // Inner compound
+  {gx:6, gy:-1,h:4,t:'#2a3640',s:'#36424c',d:'#1c2428'}, // North tower base
+  {gx:6, gy:2, h:3,t:'#243440',s:'#30404c',d:'#182028'}, // South dock wall
+  {gx:5, gy:3, h:3,t:'#223040',s:'#2e3c4c',d:'#161e28'}, // Compound close
+
+  // Dorsoduro — lagoon teal-grey, fondamenta row
+  {gx:2, gy:7, h:3,t:'#1e3038',s:'#263c48',d:'#142028'}, // Dorsoduro fondamenta
+  {gx:-3,gy:6, h:2,t:'#1a2c34',s:'#223844',d:'#101e26'}, // Low canal ruin
+  {gx:-5,gy:8, h:3,t:'#1c2e38',s:'#243a46',d:'#121e28'}, // Far Dorsoduro
+  {gx:4, gy:8, h:2,t:'#182830',s:'#20343e',d:'#0e1c24'}, // South lagoon block
+  {gx:0, gy:5, h:3,t:'#1e3038',s:'#263c48',d:'#142028'}, // Canal south approach
+  {gx:3, gy:5, h:3,t:'#1c2e36',s:'#243a44',d:'#121e24'}, // East fondamenta
+  {gx:-4,gy:5, h:3,t:'#1a2c34',s:'#223844',d:'#101e26'}, // West fondamenta
+  {gx:1, gy:7, h:2,t:'#182a32',s:'#20363e',d:'#0e1c22'}, // South calle
+  {gx:-2,gy:7, h:3,t:'#1c3038',s:'#243c46',d:'#121e26'}, // West canal block
 ];
 
 // Pre-compute ground tiles (excludes building & scene positions)
@@ -271,6 +309,89 @@ export function pickNPCDialogue(npc, matchScore, districtName) {
 // ── Playable character identities ──────────────────────────────────────────────
 // Each type starts with preset trait alignments and stat modifiers.
 // mods apply on top of the player's own intro settings.
+// ── District Map (shown before game entry) ────────────────────────────────────
+export const DISTRICTS = [
+  {id:'acqua_alta',name:'Acqua Alta Gate',col:'#534AB7',
+   spawnGX:-1,spawnGY:-1,mapX:0.40,mapY:0.32,radius:26,
+   desc:'The canal transit gate. Mood auras broadcast at peak density at dawn. Every crossing is logged.',
+   vibe:'high protocol',tags:['transit','canal','aura'],resonanceHotspot:false},
+  {id:'arsenale',name:'Arsenale Docks',col:'#BA7517',
+   spawnGX:4,spawnGY:-3,mapX:0.68,mapY:0.22,radius:28,
+   desc:'The data foundry runs on three shifts. Territorial markers bloom on the shared dock diagrams at 10 minutes.',
+   vibe:'industrial',tags:['work','territory','forge'],resonanceHotspot:false},
+  {id:'cannaregio',name:'Cannaregio Campo',col:'#1D9E75',
+   spawnGX:-5,spawnGY:1,mapX:0.21,mapY:0.47,radius:24,
+   desc:'8-second gaze protocol active. Thought pools form between neighbours. The campo shifted 2% because of you.',
+   vibe:'intimate',tags:['gaze','thought','field'],resonanceHotspot:false},
+  {id:'smart_bridge',name:'Smart Bridge',col:'#D85A30',
+   spawnGX:3,spawnGY:3,mapX:0.63,mapY:0.59,radius:24,
+   desc:'Piezoelectric arch over the Grand Canal. A shared memory object unlocks when five or more gather here.',
+   vibe:'collective',tags:['crossing','memory','cluster'],resonanceHotspot:true},
+  {id:'dorsoduro',name:'Dorsoduro Fondamenta',col:'#185FA5',
+   spawnGX:-2,spawnGY:7,mapX:0.37,mapY:0.82,radius:26,
+   desc:'Bioluminescent vote on the canal surface. The light shifts with collective feeling. A teenager watches and refuses.',
+   vibe:'civic',tags:['vote','water','dusk'],resonanceHotspot:true},
+  {id:'san_marco',name:'San Marco',col:'#AFA9EC',
+   spawnGX:-1,spawnGY:3,mapX:0.42,mapY:0.59,radius:30,
+   desc:'The city\'s ancient centre. Protocol density at maximum. The Campanile broadcasts colours you haven\'t named.',
+   vibe:'surveillance',tags:['visible','broadcast','centre'],resonanceHotspot:false},
+];
+
+// ── Vibe Synthesis Quests ─────────────────────────────────────────────────────
+export const QUESTS = [
+  {
+    id:'melancholic_masquerade',
+    name:'MELANCHOLIC MASQUERADE',
+    desc:'Find three melancholic souls lingering near the canal.',
+    check:(gs,npcs,plGx,plGy,emp)=>
+      npcs.filter(n=>n.emotion==='melancholic'&&Math.abs(n.gx-1.5)<4&&Math.hypot(n.gx-plGx,n.gy-plGy)<6).length>=3,
+    reward:'Your aura absorbs their blue — the canal deepens.',
+  },
+  {
+    id:'canal_choir',
+    name:'CANAL CHOIR',
+    desc:'Form bonds with two joyful strangers near the water.',
+    check:(gs,npcs)=>
+      gs.bonds.filter(b=>{const n=npcs.find(x=>x.id===b.id);return n&&n.emotion==='joyful'&&Math.abs(n.gx-1.5)<5;}).length>=2,
+    reward:'The canal hums back. A resonance only you can hear.',
+  },
+  {
+    id:'architects_vision',
+    name:"ARCHITECT'S VISION",
+    desc:'Visit 4 zone orbs while ENV shows BLOOMED. Bond NPCs first to bloom.',
+    check:(gs)=>gs.bloomedZones&&gs.bloomedZones.size>=4,
+    reward:"The city recognises you as a builder, not just a visitor.",
+  },
+];
+
+// ── Progression Stages ────────────────────────────────────────────────────────
+export const STAGES = {
+  wanderer:{id:'wanderer',label:'WANDERER',col:'#888780',desc:'You are learning the shape of this city.'},
+  catalyst:{id:'catalyst',label:'CATALYST',col:'#1D9E75',desc:'You are changing the city around you.'},
+  architect:{id:'architect',label:'ARCHITECT',col:'#FAC775',desc:"You are building the city's future."},
+};
+
+// ── Digital Grafting — ghost memory marks left by past players ────────────────
+export const GRAFT_MESSAGES = [
+  'the water here holds old songs',
+  'i stopped at this corner for an hour once',
+  'someone waved from that window every morning',
+  'the protocol forgot us here for a while',
+  'three of us sat in silence. it was enough',
+  'the canal was different before the sensors came',
+  'i left a signal here that nobody answered',
+  'my grandmother crossed this bridge every week',
+  'this is where i decided to stay',
+];
+
+export const DEFAULT_GRAFTS = [
+  {id:'g0',gx:-0.5,gy:3.5,msg:'the water here holds old songs',col:'#AFA9EC'},
+  {id:'g1',gx:1.5, gy:2.5,msg:'i stopped at this corner for an hour once',col:'#5DCAA5'},
+  {id:'g2',gx:-4,  gy:1.5,msg:'the protocol forgot us here for a while',col:'#534AB7'},
+  {id:'g3',gx:4,   gy:-1.5,msg:"we built the city's nervous system here",col:'#BA7517'},
+  {id:'g4',gx:-1,  gy:6.5,msg:'the canal was different before the sensors came',col:'#185FA5'},
+];
+
 export const PLAYER_TYPES = [
   {
     id:'shade',
