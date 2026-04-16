@@ -1,134 +1,145 @@
-# Neo-Venezia · Social Simulation
+# Neo-Venezia: Blurring Boundaries
 
-An interactive isometric city simulation set in Neo-Venezia — a future Venice where bioluminescent canals run with data, ancient stone carries living memory, and every social interaction is logged by the Aura Protocol. Walk through it. Form bonds. Cross the bridge. Watch the water remember you.
-
----
-
-## The World: Neo-Venezia
-
-Neo-Venezia is a near-future city built on the bones of Venice. The Grand Canal still divides it — but now it pulses with emotional data. Four districts define the city's character:
-
-| District | Location | Atmosphere |
-|---|---|---|
-| **San Marco** | Center | Limestone plazas, civic surveillance, the Protocol's heartland |
-| **Arsenale** | East (gx ≥ 3) | Former shipyards turned data foundries, amber-lit, industrial memory |
-| **Cannaregio** | North-West (gx ≤ −3 or gy ≤ −2) | Moss-warm alleys, resistance culture, low-protocol living |
-| **Dorsoduro** | South (gy ≥ 5) | Lagoon-facing, bioluminescent after dark, artists and ghosts |
-| **Grand Canal** | gx = 1–2 | The city's spine — every crossing is recorded |
-
-The **Aura Protocol** classifies each resident by emotional state, social pressure, and legibility score. Complying raises legibility. Resisting lowers it. Neither path is neutral.
+A first-person walk through a protocol-governed future Venice where social bonds reshape the city's visible soul.
 
 ---
 
-## Player Types
+## Author & course
 
-Choose your presence at the start of each session:
-
-| Type | Role | Starting Advantage |
-|---|---|---|
-| **The Architect** | Urban planner | High legibility, reads zone histories |
-| **The Drifter** | Unregistered wanderer | Low pressure, invisible to most sensors |
-| **The Liaison** | Social connector | Bonus social resonance on all bonds |
-| **The Archivist** | Memory keeper | Sees NPC histories faster |
-| **The Agitator** | Protocol disruptor | High subversion, builds tension in zones |
-| **The Witness** | Passive observer | Balanced stats, sees more NPC internal states |
-
-Each type modifies your starting **Legibility**, **Pressure**, traits, and grants a special ability that changes how the city responds to you.
+**Author:** Divya Venkatraman
+**Studio:** Prompt City — Urban Vision Wolfsburg 2026
+**Course:** IUDD Master, SoSe 2026
+**Chair:** Informatics in Architecture and Urbanism (InfAU), Faculty of Architecture and Urbanism, Bauhaus-Universität Weimar
+**Teaching staff:** Reinhard König, Martin Bielik, Sven Schneider, Egor Gaydukov, Egor Gavrilov
+**Exercise:** Urban Absurdities (Nonsense Project)
+**Submission date:** 2026-04-16
 
 ---
 
-## Mechanics
+## Links
 
-### Moving through the city
-- **WASD** or **arrow keys** to walk
-- **Click** anywhere on the map to move there
-- **Click NPCs** to initiate an encounter directly
-
-### Zone encounters
-Walk into glowing zones to encounter them. Each zone has a narrative moment and choices that affect your Legibility and Pressure stats. Visiting all 5 zones ends the session.
-
-### NPC encounters
-NPCs roam the city with their own emotions, traits, and protocol stances. When you get close, an encounter opens:
-- **Resonate** — form a bond if your Auras align
-- **Clash** — register divergence (public data)
-- **Perform a ritual** — a wordless act that the protocol cannot categorize
-
-Bonded NPCs can be revisited. Return encounters unlock deeper choices: share a memory, sit in silence, ask something real, or release the bond.
-
-### Canal Vibe Match
-When your Aura matches an NPC's emotion and both of you stand near the Grand Canal, the water blooms with your shared color. The protocol logs it as a "resonant proximity event." The canal remembers longer than either of you will.
-
-### Smart Bridge
-Every time you cross the Grand Canal, the bridge reads you. A contextual encounter fires based on the time of day:
-- **Morning** — the city is still deciding what it wants from you
-- **Midday** — the bridge is busy, the data is loud
-- **Night** — the canal is quieter; something crosses with you
-
-### Dorsoduro Bioluminescence
-After dark, Dorsoduro's ground tiles glow faintly — bio-digital organisms embedded in the stone respond to accumulated social heat. The glow is not controlled by the protocol. It just happens.
-
-### Day cycle
-Time moves continuously. The city's mood shifts from morning clarity through midday friction into late-night drift. NPC behavior, canal shimmer, and glow intensity all respond to the current hour.
+- **Live app (GitHub Pages):** https://Dya99bau.github.io/Blurring-boundary/
+- **Source repo:** https://github.com/Dya99bau/Blurring-boundary
+- **Miro frame:** https://miro.com/app/board/uXjVGCtKivA=/?moveToWidget=[YOUR-FRAME-ID]
+- **60 s showreel:** embedded on the Miro frame above
 
 ---
 
-## Setup
+## The task
 
-**Requirements:** Node.js 18+ and npm
+Nonsense Project is a two-weeks long task designed to get familiar with application of coding agents in building apps, tools and projects that investigate unique ways of working with urban context. I was randomly assigned one urban paradox and one constraint from the studio's Nonsense Ideas deck and built a working web app that answers this combination. The process is documented here and in a 60-second showreel.
 
+---
+
+## Theme & constraint
+
+**Theme (Urban Absurdity):**
+[Paste the theme exactly as drawn.]
+
+**Constraint (Playful Limitation):**
+[Paste the constraint exactly as drawn.]
+
+---
+
+## Concept and User Story
+
+### Concept
+
+Neo-Venezia: Blurring Boundaries is a first-person walking simulation set in a speculative near-future Venice where every public space is governed by social protocols — invisible rules about gaze, presence, movement, and consent. The player chooses an archetype (Shade, Weaver, Herald, Glitch, Watcher, or Broker) and walks through five districts along a Grand Canal, encountering NPCs and zone events that demand a response: COMPLY, REFUSE, SUBVERT, or OBSERVE. Each choice shifts the city's collective empathy score, which is rendered visually — the world contracts into claustrophobic neon tunnels when empathy is low, and blooms into open, iridescent light when it is high. The constraint bites in the navigation itself: the player has no map they can fully trust, only a glowing aura trail of where they have been and lit pathway tiles pointing toward what the city thinks they should do next. Venice's real-time weather is pulled live from the Open-Meteo API, so fog, rain, and wind in the actual lagoon bleed into the simulation. The city is always slightly more real than it should be.
+
+### User story
+
+[YOUR USER STORY — 100–200 words. Write it as a small narrative about one imagined user.
+
+- **Who are they?** Name, age-ish, role in the city (commuter, night-shift worker, tourist, planner, pigeon, sensor — pick someone specific, not "a user").
+- **Why do they open the app?** What pulls them in — curiosity, a task, a friend's link, boredom?
+- **What do they do, step by step?** Their first few moves inside the app.
+- **What do they experience?** What do they see, hear, notice?
+- **What do they feel?** Confused, amused, unsettled, seen, ignored?
+- **What do they take away?** Something they learned, noticed, or changed their mind about.
+
+Be concrete. A good user story makes the absurdity land through someone's eyes.]
+
+---
+
+## How to use it
+
+1. Open the live app. You land on the **player select screen** — six coloured archetypes are listed. Each has different social tendencies (the Watcher's pressure drops under surveillance; the Glitch resists all categories). Pick one and press **START**.
+2. A **tutorial overlay** explains the controls. Press **START EXPLORING** to dismiss it.
+3. **Move** with `W` / `S` (forward / back), `Q` / `E` (strafe left / right), `A` / `D` (turn). On mobile, use the D-pad at the bottom of the screen.
+4. Walk toward **glowing coloured orbs** in the distance — these are zone encounters (Acqua Alta Gate, Arsenale Dock, Cannaregio Campo, Smart Bridge, Dorsoduro Fondamenta). When you step into one a dialogue panel opens asking: COMPLY, REFUSE, SUBVERT, or OBSERVE.
+5. Walk toward **glowing humanoid figures** (NPCs). If their mood is open, an encounter triggers and you can RESONATE or CLASH. Bonding raises the city's empathy and pushes the environment toward its **BLOOMED** state — the world visibly opens up.
+6. **Tap the minimap** (top-right corner of the canvas) to open a navigation panel. Select a destination and lit pathway tiles will guide your steps toward it.
+7. Walk into the **blue canal water** at the centre of the map to trigger bridge encounter events.
+8. Open **☰ QUESTS** (bottom-left) at any time to see your current objectives and progress.
+9. Toggle **AURA** (bottom-right, or press `Tab`) to reveal mood halos around all NPCs.
+10. For the most interesting behaviour: form three or more bonds while ENV shows **BLOOMED**, then walk to four zone orbs — this unlocks the Architect's Vision quest.
+
+---
+
+## Technical implementation
+
+**Frontend:** React 18 + Vite. The entire 3D world renders inside a single HTML5 `<canvas>` using a hand-written DDA raycaster — no WebGL, no game engine. Sprites, floor tile grids, player aura trails, and particle effects are all 2D canvas draw calls projected onto the floor/wall planes using the raycaster camera matrix.
+
+**Hosting & build:** GitHub Pages, built via GitHub Actions on every push to `main` (workflow: `.github/workflows/deploy.yml`, deployer: `peaceiris/actions-gh-pages@v4`).
+
+**Data sources / APIs:**
+- [Open-Meteo](https://open-meteo.com/) — free, no-key weather API. Fetches current Venice (45.44 °N, 12.31 °E) conditions at startup; WMO weather codes are mapped to four in-game weather states (clear / fog / rain / wind).
+- `localStorage` — persists player-written grafts (text annotations left in the world) across sessions.
+
+**Models at runtime:** None.
+
+**Notable libraries:**
+- `react` / `react-dom` — component tree and HUD overlay
+- Web Audio API (browser built-in) — all sound is procedurally synthesised at runtime; zero audio files are shipped
+- No Three.js, D3, Leaflet, or external rendering library — raycaster and all draw calls are written from scratch
+
+**Run locally:**
 ```bash
-# Install dependencies
+git clone https://github.com/Dya99bau/Blurring-boundary.git
+cd Blurring-boundary
 npm install
-
-# Start the development server
 npm run dev
-```
-
-Opens at `http://localhost:5173`
-
-## Build for production
-
-```bash
-npm run build
-```
-
-Built files go into `dist/`. Preview locally with `npm run preview`.
-
-## Deploy to GitHub Pages
-
-1. Push this project to a GitHub repository
-2. In **Settings → Pages**, set source to **GitHub Actions**
-3. Edit `vite.config.js` — change the base path to match your repo name:
-   ```js
-   base: '/your-repo-name/',
-   ```
-4. Push to `main` — the site deploys automatically via the included workflow
-
----
-
-## Project structure
-
-```
-src/
-  App.jsx                — Screen routing + transition effects
-  main.jsx               — React entry point
-  index.css              — All styles
-  constants.js           — All game data (zones, NPCs, rituals, dialogue, player types)
-  screens/
-    IntroScreen.jsx      — Configure traits and session parameters
-    PlayerSelectScreen.jsx — Choose your player type
-    GameScreen.jsx       — Main game canvas, HUD, game loop
-    EndScreen.jsx        — Results + archetype reveal
-  components/
-    Slider.jsx           — Draggable range control
-    EncounterModal.jsx   — Zone, NPC, and bridge encounter overlays
+# open http://localhost:5173/Blurring-boundary/
 ```
 
 ---
 
-## Tech stack
+## Working with AI
 
-- **Vite** — build tool and dev server
-- **React 18** — UI layer (canvas rendered via useEffect, not React state)
-- **HTML5 Canvas** — isometric rendering at 60fps
-- **GitHub Actions** — automatic deployment to GitHub Pages on push to `main`
+**Coding agent used:** Claude Code
+**Model:** claude-sonnet-4-6
+
+**Key prompts (prompts that actually moved the project):**
+
+> "Build a first-person raycaster in React using only HTML5 Canvas — no WebGL, no libraries. The world is a neon Venice with canal water, bridge crossings, and district colour zones. NPCs wander and have moods. The player leaves a glowing aura trail on the floor."
+
+> "Add an Environmental Empathy system (0–1 float) that bends the raycaster visually: contracted (≈0) = tall claustrophobic walls, muted purple; bloomed (≈1) = open FOV, teal shimmer, bright canal. All colour and FOV changes derive from a single empathy value updated by player choices."
+
+> "The game is very difficult to navigate. Add a visible floor tile grid with lit pathway tiles toward objectives, click on the minimap to choose a navigation destination, move the minimap to the top so it doesn't overlap the D-pad arrows, and add a quest tab button."
+
+> "Sync the in-game weather to real Venice conditions using the Open-Meteo API. Map WMO codes to the four existing weather states and update the ambient sound filter accordingly."
+
+> [ADD YOUR OWN — one prompt that surprised you or changed the direction of the project]
+
+**Reflection (≤ 150 words):**
+
+[YOUR REFLECTION — What unlocked progress? Where did the agent get stuck or go sideways? What is one thing you would do differently next time?]
+
+---
+
+## Credits, assets, licenses
+
+**Fonts:** Space Mono — Google Fonts, SIL Open Font License
+
+**Data:** Open-Meteo live weather API — open-source, [CC BY 4.0](https://open-meteo.com/en/terms)
+
+**Images / sounds:** None — all visuals are canvas draw calls; all audio is procedurally generated via Web Audio API at runtime. No external assets are bundled.
+
+**Third-party code:**
+- `react` / `react-dom` — MIT
+- `vite` — MIT
+- `@vitejs/plugin-react` — MIT
+- `peaceiris/actions-gh-pages` (GitHub Action) — MIT
+
+**This repo:** MIT
